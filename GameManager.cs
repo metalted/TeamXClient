@@ -13,36 +13,37 @@ namespace TeamX
         public enum GameState { StartUp, MainMenu, WaitingForAccess, WaitingOnEditorDataInMainMenu, EnteringTeamXFromMainMenu, TeamXEditor, TeamXGame };
         public GameState gameState;
         public Action<PlayerStateData> TransformChange;
-        public SetupGame setupGame;
-
-        public GameManager()
-        {
-
-        }
-
         public void OnMainMenu()
         {
             Plugin.Instance.Initialize();
 
-            if(gameState == GameState.TeamXEditor)
+            if(gameState == GameState.TeamXEditor || Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
             {
-                Debug.LogError("DISCONNECT!!!!!");
-                Plugin.Instance.client.Disconnect();
+                try
+                {
+                    // Attempt to disconnect the client
+                    Plugin.Instance.client.Disconnect();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Handle issues with client initialization or connection state
+                    Console.WriteLine($"Operation failed: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    // Catch any unexpected exceptions
+                    Console.WriteLine($"Unexpected error: {ex.Message}");
+                }
             }
 
             gameState = GameState.MainMenu;
 
             Utils.CreateShpleeblePrefabInMainMenu();
-
-            if(Plugin.Instance.client.connectionStatus == ConnectionStatus.Connected)
-            {
-                Plugin.Instance.client.Disconnect();
-            }
         }
 
         public void OnLevelEditor(LEV_LevelEditorCentral instance)
         {
-            if (Plugin.Instance.client.connectionStatus == ConnectionStatus.Connected)
+            if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
             {
                 if (gameState == GameState.EnteringTeamXFromMainMenu)
                 {
@@ -106,10 +107,9 @@ namespace TeamX
 
             if (gameState == GameState.TeamXGame)
             {
-                setupGame = instance;
                 Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Race;
 
-                if (Plugin.Instance.client.connectionStatus == ConnectionStatus.Connected)
+                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
                 {
                     Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Race;
                 }
@@ -120,7 +120,7 @@ namespace TeamX
         {
             if (gameState == GameState.TeamXGame)
             {
-                if (Plugin.Instance.client.connectionStatus == ConnectionStatus.Connected)
+                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
                 {
                     Transform localRacer = instance.PlayersReady[0].transform;
                     if (localRacer.gameObject.GetComponent<PlayerObserver>() == null)
@@ -141,7 +141,7 @@ namespace TeamX
         {
             if (gameState == GameState.TeamXGame)
             {
-                if (Plugin.Instance.client.connectionStatus == ConnectionStatus.Connected)
+                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
                 {
                     if (state == (byte)3)
                     {

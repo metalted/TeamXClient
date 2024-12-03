@@ -11,7 +11,7 @@ namespace TeamX
 {
     public enum ConnectionStatus
     {
-        NotConnected, Connecting, Connected, Disconnecting
+        Disconnected, Connecting, Connected, Disconnecting
     }
     public enum CharacterMode 
     { 

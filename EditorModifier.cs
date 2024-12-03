@@ -89,5 +89,47 @@ namespace TeamX
         {
             editor.central.skybox.SetToSkybox(skyboxID, true);
         }
+
+        public void DeselectAllBlocks(bool notify = false)
+        {
+            Plugin.Instance.editor.selectionObserver.selection.DeselectAllBlocks(true, "");
+
+            if (!notify)
+            {
+                Plugin.Instance.editor.selectionObserver.SyncListCount();
+            }
+        }
+
+        public void DeselectBlock(string uid, bool notify = false)
+        {
+            int blockIndex = Plugin.Instance.editor.selectionObserver.selection.list.FindIndex(item => item.UID == uid);
+
+            if (blockIndex != -1)
+            {
+                Plugin.Instance.editor.selectionObserver.selection.RemoveBlockAt(blockIndex, true, true);
+
+                if (!notify)
+                {
+                    Plugin.Instance.editor.selectionObserver.SyncListCount();
+                }
+            }
+        }
+
+        public void SelectBlock(string uid, bool notify = false)
+        {
+            int blockIndex = Plugin.Instance.editor.selectionObserver.selection.list.FindIndex(item => item.UID == uid);
+            if (blockIndex == -1)
+            {
+                if (Plugin.Instance.editor.central.undoRedo.allBlocksDictionary.ContainsKey(uid))
+                {
+                    Plugin.Instance.editor.selectionObserver.selection.AddThisBlock(Plugin.Instance.editor.central.undoRedo.allBlocksDictionary[uid]);
+                }
+
+                if (!notify)
+                {
+                    Plugin.Instance.editor.selectionObserver.SyncListCount();
+                }
+            }
+        }
     }
 }

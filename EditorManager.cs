@@ -45,7 +45,7 @@ namespace TeamX
                 Block block = Get(uid);
 
                 //Are we the creator or have enough permission?
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.permissionLevel > 1)
+                if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
                 {
                     Plugin.Instance.client.SendDeselection(uid);
                 }
@@ -62,14 +62,14 @@ namespace TeamX
                 Block block = Get(uid);
 
                 //Are we the creator or have enough permission?
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.permissionLevel > 1)
+                if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
                 {
                     Plugin.Instance.client.SendSelection(uid);
                 }
                 //We cant edit this block, revert to before.
                 else
                 {
-                    selectionObserver.DeselectBlock(uid);
+                    Modifier.DeselectBlock(uid);
                 }
             }
         }

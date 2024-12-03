@@ -45,7 +45,7 @@ namespace TeamX
             Block block = editor.Get(afterState.UID);
             
             //Are we the creator or have enough permission?
-            if(block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.permissionLevel > 1)
+            if(block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
             {
                 //Save the change
                 block.PositionX = afterState.position.x;
@@ -91,7 +91,7 @@ namespace TeamX
             Block block = editor.Get(beforeState.UID);
 
             //Are we the creator or have enough permission?
-            if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.permissionLevel > 1)
+            if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
             {
                 //Remove the block and send the update
                 string uid = block.UID;
@@ -109,7 +109,7 @@ namespace TeamX
 
         public void FloorUpdated(int before, int after)
         {
-            if((byte) Plugin.Instance.client.permissionLevel > 1)
+            if((byte) Plugin.Instance.client.PermissionLevel > 1)
             {
                 editor.SetFloor(after);
 
@@ -124,7 +124,7 @@ namespace TeamX
 
         public void SkyboxUpdated(int before, int after)
         {
-            if ((byte)Plugin.Instance.client.permissionLevel > 1)
+            if ((byte)Plugin.Instance.client.PermissionLevel > 1)
             {
                 editor.SetSkybox(after);
 

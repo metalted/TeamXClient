@@ -9,7 +9,7 @@ namespace TeamX
 {
     public class SelectionObserver : MonoBehaviour
     {
-        private LEV_Selection selection;
+        public LEV_Selection selection;
 
         private HashSet<string> lastSelectionUIDs;
         private HashSet<string> currentUIDs;
@@ -29,6 +29,11 @@ namespace TeamX
             addedUIDs = new List<string>();
 
             Plugin.Instance.editor.selectionObserver = this;
+        }
+
+        public void SyncListCount()
+        {
+            lastListCount = selection.list.Count;
         }
 
         public void Update()
@@ -73,48 +78,6 @@ namespace TeamX
             {
                 Plugin.Instance.editor.OnBlocksAddedToSelection(addedUIDs);
             }
-        }
-
-        public void DeselectAllBlocks(bool notify = false)
-        {
-            selection.DeselectAllBlocks(true, "");
-
-            if (!notify)
-            {
-                lastListCount = selection.list.Count;
-            }
-        }
-
-        public void DeselectBlock(string uid, bool notify = false)
-        {
-            int blockIndex = selection.list.FindIndex(item => item.UID == uid);
-
-            if (blockIndex != -1)
-            {
-                selection.RemoveBlockAt(blockIndex, true, true);
-
-                if (!notify)
-                {
-                    lastListCount = selection.list.Count;
-                }
-            }
-        }
-
-        public void SelectBlock(string uid, bool notify = false)
-        {
-            int blockIndex = selection.list.FindIndex(item => item.UID == uid);
-            if (blockIndex == -1)
-            {
-                if (selection.central.undoRedo.allBlocksDictionary.ContainsKey(uid))
-                {
-                    selection.AddThisBlock(selection.central.undoRedo.allBlocksDictionary[uid]);
-                }
-
-                if (!notify)
-                {
-                    lastListCount = selection.list.Count;
-                }
-            }
-        }
+        }        
     }
 }
