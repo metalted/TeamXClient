@@ -45,7 +45,10 @@ namespace TeamX
             }
 
             Log("Initializing TeamX...");
-            client = new Client(PlayerManager.Instance.steamAchiever.GetPlayerSteamID());                    
+            ulong sid = PlayerManager.Instance.steamAchiever.GetPlayerSteamID();
+            sid += ((uint)UnityEngine.Random.Range(100, 1000));
+            //Debug.LogWarning("Generated STEAM ID: " + sid);
+            client = new Client(sid);
             init = true;
         }
 

@@ -38,8 +38,8 @@ namespace TeamX
         /// </summary>
         public void OnMainMenu()
         {
-            var client = Plugin.Instance.client;
             Plugin.Instance.Initialize();
+            var client = Plugin.Instance.client;            
 
             if (gameState == GameState.TeamXEditor || client.ConnectionStatus == ConnectionStatus.Connected)
             {
