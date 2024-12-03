@@ -2,18 +2,34 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace TeamX
 {
+    /// <summary>
+    /// Observes and handles changes made in the editor, including block creation, updates, destruction,
+    /// and changes to the floor or skybox.
+    /// </summary>
     public class EditorObserver
     {
-        private EditorManager editor;
+        /// <summary>
+        /// The <see cref="EditorManager"/> instance that this modifier operates on.
+        /// </summary>
+        private readonly EditorManager editor;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EditorObserver"/> class.
+        /// </summary>
+        /// <param name="editor">The <see cref="EditorManager"/> instance associated with this observer.</param>
         public EditorObserver(EditorManager editor)
         {
-            this.editor = editor;
+            this.editor = editor ?? throw new ArgumentNullException(nameof(editor), "EditorManager cannot be null.");
         }
 
+        /// <summary>
+        /// Handles the creation of a new block in the editor.
+        /// </summary>
+        /// <param name="afterState">The state of the block after creation.</param>
         public void BlockCreated(BlockPropertyJSON afterState)
         {
             Block block = new Block()
@@ -39,13 +55,18 @@ namespace TeamX
             Plugin.Instance.client.SendBlockCreate(block);
         }
 
+        /// <summary>
+        /// Handles the update of an existing block in the editor.
+        /// </summary>
+        /// <param name="beforeState">The state of the block before the update.</param>
+        /// <param name="afterState">The state of the block after the update.</param>
         public void BlockUpdated(BlockPropertyJSON beforeState, BlockPropertyJSON afterState)
         {
             //Get the block
             Block block = editor.Get(afterState.UID);
             
             //Are we the creator or have enough permission?
-            if(block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
+            if(block != null && (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1))
             {
                 //Save the change
                 block.PositionX = afterState.position.x;
@@ -65,19 +86,19 @@ namespace TeamX
             else
             {
                 //Remove the block from the selection if its in there
-                int index = editor.central.selection.list.FindIndex(s => s.UID == afterState.UID);
+                int index = editor.Central.selection.list.FindIndex(s => s.UID == afterState.UID);
 
                 if(index > 0)
                 {
-                    Debug.LogError(editor.central.selection.list.Count);
-                    if (editor.central.selection.list.Count == 1)
+                    Debug.LogError(editor.Central.selection.list.Count);
+                    if (editor.Central.selection.list.Count == 1)
                     {
-                        editor.central.selection.ClickNothing();
-                        editor.central.gizmos.Deactivate();                                               
+                        editor.Central.selection.ClickNothing();
+                        editor.Central.gizmos.Deactivate();                                               
                     }
                     else
                     {
-                        editor.central.selection.RemoveBlockAt(index, true, true);
+                        editor.Central.selection.RemoveBlockAt(index, true, true);
                     }
                 }
 
@@ -85,6 +106,10 @@ namespace TeamX
             }
         }
 
+        /// <summary>
+        /// Handles the destruction of a block in the editor.
+        /// </summary>
+        /// <param name="beforeState">The state of the block before destruction.</param>
         public void BlockDestroyed(BlockPropertyJSON beforeState)
         {
             //Get the block
@@ -107,11 +132,16 @@ namespace TeamX
             }
         }
 
+        /// <summary>
+        /// Handles updates to the editor's floor.
+        /// </summary>
+        /// <param name="before">The floor state before the update.</param>
+        /// <param name="after">The floor state after the update.</param>
         public void FloorUpdated(int before, int after)
         {
             if((byte) Plugin.Instance.client.PermissionLevel > 1)
             {
-                editor.SetFloor(after);
+                editor.Floor = after;
 
                 Plugin.Instance.client.SendFloorUpdate(after);
             }
@@ -122,11 +152,16 @@ namespace TeamX
             }
         }
 
+        /// <summary>
+        /// Handles updates to the editor's skybox.
+        /// </summary>
+        /// <param name="before">The skybox state before the update.</param>
+        /// <param name="after">The skybox state after the update.</param>
         public void SkyboxUpdated(int before, int after)
         {
             if ((byte)Plugin.Instance.client.PermissionLevel > 1)
             {
-                editor.SetSkybox(after);
+                editor.Skybox = after;
 
                 Plugin.Instance.client.SendSkyboxUpdate(after);
             }
@@ -138,7 +173,9 @@ namespace TeamX
         }
     }
 
-    // Called when a change is made on an object.
+    /// <summary>
+    /// Harmony patch for detecting changes in the editor and invoking appropriate handlers.
+    /// </summary>
     [HarmonyPatch(typeof(LEV_UndoRedo), "SomethingChanged")]
     public class LEV_UndoRedoSomethingChangedPatch
     {
@@ -178,7 +215,9 @@ namespace TeamX
         }
     }
 
-    // Called when a change is undone.
+    /// <summary>
+    /// Harmony patch for detecting changes in the editor and invoking appropriate handlers.
+    /// </summary>
     [HarmonyPatch(typeof(LEV_UndoRedo), "ApplyBeforeState")]
     public class LEV_UndoRedoApplyBeforeStatePatch
     {
@@ -220,7 +259,9 @@ namespace TeamX
         }
     }
 
-    // Called when a change is redone.
+    /// <summary>
+    /// Harmony patch for detecting changes in the editor and invoking appropriate handlers.
+    /// </summary>
     [HarmonyPatch(typeof(LEV_UndoRedo), "ApplyAfterState")]
     public class LEV_UndoRedoApplyAfterStatePatch
     {
@@ -261,33 +302,4 @@ namespace TeamX
             }
         }
     }
-
-    /*
-    [HarmonyPatch(typeof(LEV_Selection), "RegisterManualSelectionBreakLock")]
-    public class LEV_SelectionRegisterManualSelectionBreakLockPatch
-    {
-        public static void Postfix(ref List<string> selectionUIDs_before, ref List<string> selectionUIDs_after)
-        {
-            Debug.LogError("Before (" + selectionUIDs_before.Count + "): " + string.Join(',', selectionUIDs_before));
-            Debug.LogError("After (" + selectionUIDs_after.Count + "): " + string.Join(',', selectionUIDs_after));
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_Selection), "DeselectAllBlocks")]
-    public class LEV_SelectionDeselectAllBlocksPatch
-    {
-        public static void Postfix()
-        {
-            Debug.LogError("Deselect All Blocks");
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_Selection), "UndoRedoReselection")]
-    public class LEV_SelectionUndoRedoReselection
-    {
-        public static void Postfix(ref List<BlockProperties> newSelection)
-        {
-            Debug.LogWarning("UndoRedoSelect (" + newSelection.Count + "): " + string.Join(',', newSelection.Select(bp => bp.UID).ToList()));
-        }
-    }*/
 }

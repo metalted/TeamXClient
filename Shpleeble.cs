@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace TeamX
 {
+    /// <summary>
+    /// Represents a Shpleeble character in the game, capable of moving, rotating, and updating its state based on player data and mode.
+    /// </summary>
     public class Shpleeble : MonoBehaviour
     {
         //Data
@@ -32,21 +35,35 @@ namespace TeamX
         private Quaternion targetArmatureRotation = Quaternion.identity;
         private Quaternion targetBodyRotation = Quaternion.identity;
 
+        /// <summary>
+        /// Activates the Shpleeble, enabling its functionality.
+        /// </summary>
         public void Activate()
         {
             active = true;
         }
 
+        /// <summary>
+        /// Deactivates the Shpleeble, disabling its functionality.
+        /// </summary>
         public void Deactivate()
         {
             active = false;
         }
 
+        /// <summary>
+        /// Checks if the Shpleeble is active.
+        /// </summary>
+        /// <returns>True if active; otherwise, false.</returns>
         public bool IsActive()
         {
             return active;
         }
 
+        /// <summary>
+        /// Sets the player data associated with this Shpleeble and updates its appearance and mode.
+        /// </summary>
+        /// <param name="playerData">The player data to set.</param>
         public void SetPlayerData(PlayerData playerData)
         {
             this.playerData = playerData;
@@ -56,12 +73,34 @@ namespace TeamX
             SetMode(playerData.state);
         }
 
+        /// <summary>
+        /// Retrieves the player data associated with this Shpleeble.
+        /// </summary>
+        /// <returns>The player data.</returns>
+
         public PlayerData GetPlayerData()
         {
             return playerData;
         }
 
-        public void SetObjects(SetupModelCar soapbox, SetupModelCar cameraMan, TextMeshPro displayName, GameObject hornModel, GameObject paragliderModel, GameObject camera, Transform armatureTop)
+        /// <summary>
+        /// Configures the Shpleeble's components, such as models and UI elements.
+        /// </summary>
+        /// <param name="soapbox">The soapbox model.</param>
+        /// <param name="cameraMan">The camera man model.</param>
+        /// <param name="displayName">The display name text.</param>
+        /// <param name="hornModel">The horn model.</param>
+        /// <param name="paragliderModel">The paraglider model.</param>
+        /// <param name="camera">The camera object.</param>
+        /// <param name="armatureTop">The top of the armature transform.</param>
+        public void SetObjects(
+            SetupModelCar soapbox,
+            SetupModelCar cameraMan,
+            TextMeshPro displayName,
+            GameObject hornModel,
+            GameObject paragliderModel,
+            GameObject camera,
+            Transform armatureTop)
         {
             this.soapbox = soapbox;
             this.cameraMan = cameraMan;
@@ -72,23 +111,34 @@ namespace TeamX
             this.armatureTop = armatureTop;
         }
 
+
+        /// <summary>
+        /// Sets the display name for the Shpleeble.
+        /// </summary>
+        /// <param name="name">The name to display.</param>
         public void SetName(string name)
         {
             displayName.text = name;
         }
 
+        /// <summary>
+        /// Updates the Shpleeble's cosmetics based on the provided cosmetic data.
+        /// </summary>
+        /// <param name="cosmetics">The cosmetic data.</param>
         public void SetCosmetics(CosmeticsV16 cosmetics)
         {
             soapbox.DoCarSetup(cosmetics, false, false, true);
             cameraMan.DoCarSetup(cosmetics, false, false, true);
         }
 
+        /// <summary>
+        /// Sets the Shpleeble's mode using a mode identifier.
+        /// </summary>
+        /// <param name="mode">The mode identifier (byte).</param>
         public void SetMode(byte mode)
         {
-            if(mode == (byte) currentMode)
-            {
+            if (mode == (byte)currentMode)
                 return;
-            }
 
             switch (mode)
             {
@@ -104,6 +154,10 @@ namespace TeamX
             }
         }
 
+        /// <summary>
+        /// Sets the Shpleeble's mode using a <see cref="CharacterMode"/> value.
+        /// </summary>
+        /// <param name="mode">The mode to set.</param>
         public void SetMode(CharacterMode mode)
         {
             switch (mode)
@@ -116,6 +170,7 @@ namespace TeamX
                     cameraMan.gameObject.SetActive(true);
                     currentMode = CharacterMode.Build;
                     break;
+
                 case CharacterMode.Race:
                 case CharacterMode.Offroad:
                     cameraMan.gameObject.SetActive(false);
@@ -123,11 +178,12 @@ namespace TeamX
                     paragliderModel.gameObject.SetActive(false);
                     currentMode = CharacterMode.Race;
                     break;
+
                 case CharacterMode.Paraglider:
                     cameraMan.gameObject.SetActive(false);
                     soapbox.gameObject.SetActive(true);
                     paragliderModel.gameObject.SetActive(true);
-                    foreach (Transform t in paragliderModel.gameObject.transform)
+                    foreach (Transform t in paragliderModel.transform)
                     {
                         t.gameObject.SetActive(true);
                     }
@@ -136,64 +192,81 @@ namespace TeamX
             }
         }
 
+        /// <summary>
+        /// Moves the Shpleeble towards a specified position.
+        /// </summary>
+        /// <param name="position">The target position.</param>
+        /// <param name="instant">If true, moves instantly; otherwise, interpolates over time.</param>
         public void MoveTowards(Vector3 position, bool instant = false)
         {
             targetPosition = position;
 
-            if(instant)
+            if (instant)
             {
                 transform.position = position;
             }
         }
 
+        /// <summary>
+        /// Rotates the Shpleeble towards a specified Euler rotation.
+        /// </summary>
+        /// <param name="euler">The target Euler angles.</param>
+        /// <param name="instant">If true, rotates instantly; otherwise, interpolates over time.</param>
         public void RotateTowards(Vector3 euler, bool instant = false)
         {
-            Quaternion rotation = Quaternion.Euler(euler);
-            targetRotation = rotation;
+            targetRotation = Quaternion.Euler(euler);
 
-            if(instant)
+            if (instant)
             {
-                transform.rotation = rotation;
+                transform.rotation = targetRotation;
             }
         }
 
-        public void RotateFullBodyTowards(float angle, bool instant = false) 
+        /// <summary>
+        /// Rotates the Shpleeble's full body towards a specified angle.
+        /// </summary>
+        /// <param name="angle">The target angle (degrees).</param>
+        /// <param name="instant">If true, rotates instantly; otherwise, interpolates over time.</param>
+        public void RotateFullBodyTowards(float angle, bool instant = false)
         {
-            Quaternion rotation = Quaternion.Euler(0, angle, 0);
-            targetBodyRotation = rotation;
+            targetBodyRotation = Quaternion.Euler(0, angle, 0);
 
-            if(instant)
+            if (instant)
             {
-                transform.rotation = rotation;
+                transform.rotation = targetBodyRotation;
             }
         }
 
-        public void RotateUpperBodyTowards(float angle, bool instant = false) 
+        /// <summary>
+        /// Rotates the Shpleeble's upper body towards a specified angle.
+        /// </summary>
+        /// <param name="angle">The target angle (degrees).</param>
+        /// <param name="instant">If true, rotates instantly; otherwise, interpolates over time.</param>
+        public void RotateUpperBodyTowards(float angle, bool instant = false)
         {
-            Quaternion rotation = Quaternion.Euler(0, 270f, 180f - angle);
-            targetArmatureRotation = rotation;
+            targetArmatureRotation = Quaternion.Euler(0, 270f, 180f - angle);
 
-            if(instant)
+            if (instant)
             {
-                armatureTop.localRotation = rotation;
+                armatureTop.localRotation = targetArmatureRotation;
             }
         }
 
+        /// <summary>
+        /// Updates the Shpleeble's state every frame, handling movement, rotation, and UI alignment.
+        /// </summary>
         private void Update()
         {
             if (!active)
-            {
                 return;
-            }
 
-            //Make display name visible to camera
             try
             {
                 displayName.transform.LookAt(Camera.main.transform.position);
             }
             catch { }
 
-            //Move towards Position
+            // Movement
             if (targetPosition != transform.position)
             {
                 float distance = Vector3.Distance(transform.position, targetPosition);
@@ -207,54 +280,66 @@ namespace TeamX
                 case CharacterMode.Paint:
                 case CharacterMode.Treegun:
                 case CharacterMode.Read:
-                    //Armature Rotation
-                    if (targetArmatureRotation != armatureTop.localRotation)
-                    {
-                        float angle = Quaternion.Angle(armatureTop.localRotation, targetArmatureRotation);
-                        float rotateDuration = angle / maxRotateDuration;
-                        armatureTop.localRotation = Quaternion.RotateTowards(armatureTop.localRotation, targetArmatureRotation, rotateDuration * Time.deltaTime);
-                    }
-
-                    //Body Rotation
-                    if (targetBodyRotation != transform.rotation)
-                    {
-                        float angle = Quaternion.Angle(transform.rotation, targetBodyRotation);
-                        float rotateDuration = angle / maxRotateDuration;
-                        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetBodyRotation, rotateDuration * Time.deltaTime);
-                    }
+                    HandleBuildModeRotation();
                     break;
+
                 case CharacterMode.Race:
                 case CharacterMode.Paraglider:
                 case CharacterMode.Offroad:
-                    //Soapbox
-                    if (targetRotation != transform.rotation)
-                    {
-                        float angle = Quaternion.Angle(transform.rotation, targetRotation);
-                        float rotateDuration = angle / maxRotateDuration;
-                        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateDuration * Time.deltaTime);
-                    }
+                    HandleRaceModeRotation();
                     break;
             }
         }
 
+        /// <summary>
+        /// Updates the Shpleeble's transform based on the given position and rotation.
+        /// </summary>
+        /// <param name="pos">The target position.</param>
+        /// <param name="eul">The target Euler rotation.</param>
         public void UpdateTransform(Vector3 pos, Vector3 eul)
         {
-            switch (currentMode)
+            MoveTowards(pos);
+            if (currentMode == CharacterMode.Build)
             {
-                case CharacterMode.Build:
-                case CharacterMode.Paint:
-                case CharacterMode.Treegun:
-                case CharacterMode.Read:
-                    MoveTowards(pos);
-                    RotateFullBodyTowards(eul.y);
-                    RotateUpperBodyTowards(eul.x);
-                    break;
-                case CharacterMode.Race:
-                case CharacterMode.Paraglider:
-                case CharacterMode.Offroad:
-                    MoveTowards(pos);
-                    RotateTowards(eul);
-                    break;
+                RotateFullBodyTowards(eul.y);
+                RotateUpperBodyTowards(eul.x);
+            }
+            else
+            {
+                RotateTowards(eul);
+            }
+        }
+
+        /// <summary>
+        /// Handles rotation for build-related modes.
+        /// </summary>
+        private void HandleBuildModeRotation()
+        {
+            if (targetArmatureRotation != armatureTop.localRotation)
+            {
+                float angle = Quaternion.Angle(armatureTop.localRotation, targetArmatureRotation);
+                float rotateDuration = angle / maxRotateDuration;
+                armatureTop.localRotation = Quaternion.RotateTowards(armatureTop.localRotation, targetArmatureRotation, rotateDuration * Time.deltaTime);
+            }
+
+            if (targetBodyRotation != transform.rotation)
+            {
+                float angle = Quaternion.Angle(transform.rotation, targetBodyRotation);
+                float rotateDuration = angle / maxRotateDuration;
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetBodyRotation, rotateDuration * Time.deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// Handles rotation for race-related modes.
+        /// </summary>
+        private void HandleRaceModeRotation()
+        {
+            if (targetRotation != transform.rotation)
+            {
+                float angle = Quaternion.Angle(transform.rotation, targetRotation);
+                float rotateDuration = angle / maxRotateDuration;
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotateDuration * Time.deltaTime);
             }
         }
     }

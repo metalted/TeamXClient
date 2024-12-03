@@ -9,42 +9,35 @@ using UnityEngine;
 
 namespace TeamX
 {
+    /// <summary>
+    /// Represents the current connection status of a client.
+    /// </summary>
     public enum ConnectionStatus
     {
-        Disconnected, Connecting, Connected, Disconnecting
+        Disconnected,
+        Connecting,
+        Connected,
+        Disconnecting
     }
-    public enum CharacterMode 
-    { 
-        Build = 0, Race = 1, Paraglider = 2, Offroad = 3, Paint = 4, Treegun = 5, Read = 6, None = 9
-    };
 
-    public enum NetworkMessageType
+    /// <summary>
+    /// Defines the modes a player character can be in.
+    /// </summary>
+    public enum CharacterMode
     {
-        LogIn = 10,
-        JoinedPlayerData = 11,
-        ServerPlayerData = 12,
-        PlayerTransformData = 13,
-        PlayerStateData = 14,
-        PlayerLeft = 15,
-        ServerData = 20,
-        LevelEditorChangeEvents = 100,
-        BlockCreateEvent = 101,
-        BlockDestroyEvent = 102,
-        BlockChangeEvent = 103,
-        EditorFloorEvent = 104,
-        EditorSkyboxEvent = 105,
-        CustomMessage = 200
+        Build = 0,
+        Race = 1,
+        Paraglider = 2,
+        Offroad = 3,
+        Paint = 4,
+        Treegun = 5,
+        Read = 6,
+        None = 9
     }
 
-    public struct LevelEditorChange
-    {
-        public enum ChangeType { BlockCreate, BlockUpdate, BlockDestroy, Floor, Skybox };
-        public ChangeType changeType;
-        public string UID;
-        public string string_data;
-        public int int_data;
-    }
-
+    /// <summary>
+    /// Holds player data, including their cosmetic setup and state.
+    /// </summary>
     public struct PlayerData
     {
         public ulong steamID;
@@ -64,27 +57,37 @@ namespace TeamX
         public int color_rightLeg;
         public int color;
 
+        /// <summary>
+        /// Converts player cosmetic data into a <see cref="CosmeticsV16"/> object.
+        /// </summary>
+        /// <returns>The converted cosmetics data.</returns>
         public CosmeticsV16 ToCosmeticsV16()
         {
-            CosmeticsV16 cosmetics = new CosmeticsV16();
-            ZeepkistNetworking.CosmeticIDs cosmeticIDs = new ZeepkistNetworking.CosmeticIDs();
-            cosmeticIDs.zeepkist = zeepkist;
-            cosmeticIDs.frontWheels = frontWheels;
-            cosmeticIDs.rearWheels = rearWheels;
-            cosmeticIDs.paraglider = paraglider;
-            cosmeticIDs.horn = horn;
-            cosmeticIDs.hat = hat;
-            cosmeticIDs.glasses = glasses;
-            cosmeticIDs.color_body = color_body;
-            cosmeticIDs.color_leftArm = color_leftArm;
-            cosmeticIDs.color_rightArm = color_rightArm;
-            cosmeticIDs.color_leftLeg = color_leftLeg;
-            cosmeticIDs.color_rightLeg = color_rightLeg;
-            cosmeticIDs.color = color;
+            CosmeticsV16 cosmetics = new();
+            ZeepkistNetworking.CosmeticIDs cosmeticIDs = new()
+            {
+                zeepkist = zeepkist,
+                frontWheels = frontWheels,
+                rearWheels = rearWheels,
+                paraglider = paraglider,
+                horn = horn,
+                hat = hat,
+                glasses = glasses,
+                color_body = color_body,
+                color_leftArm = color_leftArm,
+                color_rightArm = color_rightArm,
+                color_leftLeg = color_leftLeg,
+                color_rightLeg = color_rightLeg,
+                color = color
+            };
             cosmetics.IDsToCosmetics(cosmeticIDs);
             return cosmetics;
         }
     }
+
+    /// <summary>
+    /// Represents a player's state in the game.
+    /// </summary>
     public struct PlayerStateData
     {
         public ulong SteamID;
@@ -93,12 +96,19 @@ namespace TeamX
         public byte Mode;
     }
 
+    /// <summary>
+    /// Holds the state data of the editor, including floor and skybox settings.
+    /// </summary>
     public struct EditorStateData
     {
         public int floor;
         public int skybox;
         public List<string> blocks;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EditorStateData"/> struct with default values.
+        /// </summary>
+        /// <param name="b">Default constructor flag.</param>
         public EditorStateData(bool b = true)
         {
             floor = -1;
@@ -109,63 +119,7 @@ namespace TeamX
 
     public static class Utils
     {
-        public static Shpleeble shpleeblePrefab;
-
-        public static BlockPropertyJSON BlockToBlockPropertyJSON(Block block)
-        {
-            BlockPropertyJSON json = new BlockPropertyJSON()
-            {
-                blockID = block.ID,
-                eulerAngles = new Vector3(block.EulerAnglesX, block.EulerAnglesY, block.EulerAnglesZ),
-                localScale = new Vector3(block.LocalScaleX, block.LocalScaleY, block.LocalScaleZ),
-                position = new Vector3(block.PositionX, block.PositionY, block.PositionZ),
-                properties = block.Properties,
-                UID = block.UID
-            };
-
-            return json;
-        }
-
-        public static List<float> PropertyStringToList(string properties)
-        {
-            return properties.Split('|').Select(s => float.Parse(s, CultureInfo.InvariantCulture)).ToList();
-        }
-
-        public static string PropertyListToString(List<float> properties)
-        {
-            return string.Join("|", properties.Select(p => p.ToString(CultureInfo.InvariantCulture)));
-        }
-
-        public static void AssignPropertyListToBlockPropertyJSON(string properties, BlockPropertyJSON blockPropertyJSON)
-        {
-            List<float> propertyList = PropertyStringToList(properties);
-
-            blockPropertyJSON.position.x = propertyList[0];
-            blockPropertyJSON.position.y = propertyList[1];
-            blockPropertyJSON.position.z = propertyList[2];
-            blockPropertyJSON.eulerAngles.x = propertyList[3];
-            blockPropertyJSON.eulerAngles.y = propertyList[4];
-            blockPropertyJSON.eulerAngles.z = propertyList[5];
-            blockPropertyJSON.localScale.x = propertyList[6];
-            blockPropertyJSON.localScale.y = propertyList[7];
-            blockPropertyJSON.localScale.z = propertyList[8];
-            blockPropertyJSON.properties = propertyList;
-        }
-
-        public static string FixMissingJSONProperties(string blockJSON)
-        {
-            BlockPropertyJSON block = LEV_UndoRedo.GetJSONblock(blockJSON);
-            block.properties[0] = block.position.x;
-            block.properties[1] = block.position.y;
-            block.properties[2] = block.position.z;
-            block.properties[3] = block.eulerAngles.x;
-            block.properties[4] = block.eulerAngles.y;
-            block.properties[5] = block.eulerAngles.z;
-            block.properties[6] = block.localScale.x;
-            block.properties[7] = block.localScale.y;
-            block.properties[8] = block.localScale.z;
-            return LEV_UndoRedo.GetJSONstring(block);
-        }
+        public static Shpleeble shpleeblePrefab;       
 
         public static BlockPropertyJSON GetFixedJSONBlock(string blockJSON)
         {
@@ -182,33 +136,8 @@ namespace TeamX
             return block;
         }
 
-        public static string FixedPropertyListToString(string blockJSON)
-        {
-            BlockPropertyJSON block = LEV_UndoRedo.GetJSONblock(blockJSON);
-            block.properties[0] = block.position.x;
-            block.properties[1] = block.position.y;
-            block.properties[2] = block.position.z;
-            block.properties[3] = block.eulerAngles.x;
-            block.properties[4] = block.eulerAngles.y;
-            block.properties[5] = block.eulerAngles.z;
-            block.properties[6] = block.localScale.x;
-            block.properties[7] = block.localScale.y;
-            block.properties[8] = block.localScale.z;
-            return PropertyListToString(block.properties);
-        }
-
-        public static void CopyFromTo(BlockPropertyJSON from, BlockPropertyJSON to)
-        {
-            to.blockID = from.blockID;
-            to.position = from.position;
-            to.eulerAngles = from.eulerAngles;
-            to.localScale = from.localScale;
-            to.properties = from.properties.ToList();
-            to.UID = from.UID;
-        }
-
          public static PlayerData GetLocalPlayerData()
-        {
+         {
             PlayerData playerData = new PlayerData();
             playerData.state = 255;
 

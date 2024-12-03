@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using TeamX.Extensions;
 using UnityEngine;
 
 namespace TeamX
@@ -521,7 +522,7 @@ namespace TeamX
         /// <param name="editorBlockCreate">The <see cref="EditorBlockCreatePacket"/> containing the block data.</param>
         public void HandleEditorBlockCreate(EditorBlockCreatePacket editorBlockCreate)
         {
-            Block packetBlock = Plugin.Instance.editor.JSONToBlock(editorBlockCreate.BlockString);
+            Block packetBlock = editorBlockCreate.BlockString.FromJson();
 
             // Update the editor state
             Plugin.Instance.editor.Add(packetBlock);
@@ -539,13 +540,13 @@ namespace TeamX
         /// <param name="editorBlockUpdate">The <see cref="EditorBlockUpdatePacket"/> containing the updated block data.</param>
         public void HandleEditorBlockUpdate(EditorBlockUpdatePacket editorBlockUpdate)
         {
-            Block packetBlock = Plugin.Instance.editor.JSONToBlock(editorBlockUpdate.BlockString);
+            Block packetBlock = editorBlockUpdate.BlockString.FromJson();
 
             Plugin.Instance.editor.Update(packetBlock);
 
             if (Plugin.Instance.editor.InLevelEditor())
             {
-                Plugin.Instance.editor.Modifier.UpdateBlock(Utils.BlockToBlockPropertyJSON(packetBlock));
+                Plugin.Instance.editor.Modifier.UpdateBlock(packetBlock.ToBlockPropertyJSON());
             }
         }
 
@@ -571,7 +572,7 @@ namespace TeamX
         /// <param name="editorSkybox">The <see cref="EditorSkyboxPacket"/> containing the skybox data.</param>
         public void HandleEditorSkybox(EditorSkyboxPacket editorSkybox)
         {
-            Plugin.Instance.editor.SetSkybox(editorSkybox.Skybox);
+            Plugin.Instance.editor.Skybox = editorSkybox.Skybox;
 
             if(Plugin.Instance.editor.InLevelEditor())
             {
@@ -586,7 +587,7 @@ namespace TeamX
         /// <param name="editorFloor">The <see cref="EditorFloorPacket"/> containing the floor data.</param>
         public void HandleEditorFloor(EditorFloorPacket editorFloor)
         {
-            Plugin.Instance.editor.SetFloor(editorFloor.Floor);
+            Plugin.Instance.editor.Floor = editorFloor.Floor;
 
             if(Plugin.Instance.editor.InLevelEditor())
             {
@@ -616,13 +617,13 @@ namespace TeamX
         /// <param name="updateDenied">The <see cref="EditorBlockUpdateDeniedPacket"/> containing the block's previous state.</param>
         public void HandleEditorBlockUpdateDenied(EditorBlockUpdateDeniedPacket updateDenied)
         {
-            Block packetBlock = Plugin.Instance.editor.JSONToBlock(updateDenied.BlockString);
+            Block packetBlock = updateDenied.BlockString.FromJson();
             Plugin.Instance.editor.Update(packetBlock);
 
             if(Plugin.Instance.editor.InLevelEditor())
             {
-                BlockPropertyJSON blockJSON = Utils.BlockToBlockPropertyJSON(packetBlock);
-                Plugin.Instance.editor.Modifier.UpdateBlock(blockJSON);
+                BlockPropertyJSON blockPropertyJSON = packetBlock.ToBlockPropertyJSON();
+                Plugin.Instance.editor.Modifier.UpdateBlock(blockPropertyJSON);
             }            
         }
 
@@ -633,7 +634,7 @@ namespace TeamX
         /// <param name="destroyDenied">The <see cref="EditorBlockDestroyDeniedPacket"/> containing the block's data.</param>
         public void HandleEditorBlockDestroyDenied(EditorBlockDestroyDeniedPacket destroyDenied)
         {
-            Block packetBlock = Plugin.Instance.editor.JSONToBlock(destroyDenied.BlockString);
+            Block packetBlock = destroyDenied.BlockString.FromJson();
             Plugin.Instance.editor.Add(packetBlock);
 
             if(Plugin.Instance.editor.InLevelEditor())
@@ -649,7 +650,7 @@ namespace TeamX
         /// <param name="floorDenied">The <see cref="EditorFloorDeniedPacket"/> containing the floor data.</param>
         public void HandleEditorFloorDenied(EditorFloorDeniedPacket floorDenied)
         {
-            Plugin.Instance.editor.SetFloor(floorDenied.Floor);
+            Plugin.Instance.editor.Floor = floorDenied.Floor;
 
             if(Plugin.Instance.editor.InLevelEditor())
             {
@@ -664,7 +665,7 @@ namespace TeamX
         /// <param name="skyboxDenied">The <see cref="EditorSkyboxDeniedPacket"/> containing the skybox data.</param>
         public void HandleEditorSkyboxDenied(EditorSkyboxDeniedPacket skyboxDenied)
         {
-            Plugin.Instance.editor.SetSkybox(skyboxDenied.Skybox);
+            Plugin.Instance.editor.Skybox = skyboxDenied.Skybox;
 
             if(Plugin.Instance.editor.InLevelEditor())
             {
@@ -693,7 +694,7 @@ namespace TeamX
         {
             EditorBlockCreatePacket blockCreate = new EditorBlockCreatePacket()
             {
-                BlockString = Plugin.Instance.editor.BlockToJSON(block),
+                BlockString = block.ToJson(),
                 SteamID = ClientSteamID
             };
 
@@ -710,7 +711,7 @@ namespace TeamX
         {
             EditorBlockUpdatePacket blockUpdate = new EditorBlockUpdatePacket()
             {
-                BlockString = Plugin.Instance.editor.BlockToJSON(block),
+                BlockString = block.ToJson(),
                 SteamID = ClientSteamID
             };
 

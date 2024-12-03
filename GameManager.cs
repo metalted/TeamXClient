@@ -8,153 +8,192 @@ using UnityEngine;
 
 namespace TeamX
 {
+    /// <summary>
+    /// Manages the game's state and transitions between different states such as MainMenu, LevelEditor, and Game.
+    /// Handles actions like player spawning, state changes, and client connections.
+    /// </summary>
     public class GameManager
     {
-        public enum GameState { StartUp, MainMenu, WaitingForAccess, WaitingOnEditorDataInMainMenu, EnteringTeamXFromMainMenu, TeamXEditor, TeamXGame };
+        /// <summary>
+        /// Represents the various states the game can be in.
+        /// </summary>
+        public enum GameState
+        {
+            StartUp,
+            MainMenu,
+            WaitingForAccess,
+            WaitingOnEditorDataInMainMenu,
+            EnteringTeamXFromMainMenu,
+            TeamXEditor,
+            TeamXGame
+        }
+
+        /// <summary>
+        /// The current state of the game.
+        /// </summary>
         public GameState gameState;
-        public Action<PlayerStateData> TransformChange;
+
+        /// <summary>
+        /// Handles actions to perform when entering the Main Menu.
+        /// </summary>
         public void OnMainMenu()
         {
+            var client = Plugin.Instance.client;
             Plugin.Instance.Initialize();
 
-            if(gameState == GameState.TeamXEditor || Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
+            if (gameState == GameState.TeamXEditor || client.ConnectionStatus == ConnectionStatus.Connected)
             {
                 try
                 {
-                    // Attempt to disconnect the client
-                    Plugin.Instance.client.Disconnect();
+                    client.Disconnect();
                 }
                 catch (InvalidOperationException ex)
                 {
-                    // Handle issues with client initialization or connection state
-                    Console.WriteLine($"Operation failed: {ex.Message}");
+                    Debug.LogError($"Failed to disconnect: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
-                    // Catch any unexpected exceptions
-                    Console.WriteLine($"Unexpected error: {ex.Message}");
+                    Debug.LogError($"Unexpected error during disconnect: {ex.Message}");
                 }
             }
 
             gameState = GameState.MainMenu;
-
             Utils.CreateShpleeblePrefabInMainMenu();
         }
 
+        /// <summary>
+        /// Handles actions to perform when entering the Level Editor.
+        /// </summary>
+        /// <param name="instance">The <see cref="LEV_LevelEditorCentral"/> instance representing the editor's central manager.</param>
         public void OnLevelEditor(LEV_LevelEditorCentral instance)
         {
-            if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
+            var client = Plugin.Instance.client;
+            var editor = Plugin.Instance.editor;
+            var multiplayer = Plugin.Instance.multiplayer;
+
+            if (client.ConnectionStatus == ConnectionStatus.Connected)
             {
                 if (gameState == GameState.EnteringTeamXFromMainMenu)
                 {
-                    //Spawn players.
-                    Debug.Log("Spawn players and shit");
+                    Debug.Log("Spawning players.");
                     gameState = GameState.TeamXEditor;
                 }
 
-                if(gameState == GameState.TeamXGame)
+                if (gameState == GameState.TeamXGame)
                 {
                     gameState = GameState.TeamXEditor;
                 }
-                
+
                 if (gameState == GameState.TeamXEditor)
                 {
-                    Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Build;
+                    multiplayer.LocalPlayerMode = CharacterMode.Build;
+                    editor.SetCentral(instance);
 
-                    Plugin.Instance.editor.central = instance;
-
-
-                    Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Build;
-
-                    if (instance.cam.cameraTransform.gameObject.GetComponent<PlayerObserver>() == null)
+                    var cameraTransform = instance.cam.cameraTransform;
+                    if (cameraTransform.gameObject.GetComponent<PlayerObserver>() == null)
                     {
-                        instance.cam.cameraTransform.gameObject.AddComponent<PlayerObserver>();
+                        cameraTransform.gameObject.AddComponent<PlayerObserver>();
                     }
 
-                    Plugin.Instance.StartCoroutine(Plugin.Instance.editor.InstantiateFromState());
+                    Plugin.Instance.StartCoroutine(editor.InstantiateFromState());
 
-                    if (instance.gameObject.GetComponent<SelectionObserver>() == null)
-                    {
-                        SelectionObserver observer = instance.gameObject.AddComponent<SelectionObserver>();
-                        observer.Initialize(Plugin.Instance.editor.central.selection);
-                    }
+                    var central = editor.Central;
+                    var globalLevel = central.testMap.GlobalLevel;
+                    var manager = central.manager;
 
-                    if (!Plugin.Instance.editor.central.testMap.GlobalLevel.IsTestLevel)
+                    if (!globalLevel.IsTestLevel)
                     {
                         return;
                     }
 
-                    Plugin.Instance.editor.central.testMap.GlobalLevel.IsTestLevel = false;
-                    Plugin.Instance.editor.central.manager.unsavedContent = false;
+                    globalLevel.IsTestLevel = false;
+                    manager.unsavedContent = false;
 
-
-                    if (Plugin.Instance.editor.central.manager.weLoadedLevelEditorFromMainMenu)
+                    if (manager.weLoadedLevelEditorFromMainMenu)
                     {
                         return;
                     }
 
-                    Plugin.Instance.editor.central.undoRedo.historyList = Plugin.Instance.editor.central.manager.tempUndoList;                    
+                    central.undoRedo.historyList = manager.tempUndoList;
                 }
             }
         }
 
+        /// <summary>
+        /// Handles actions to perform when entering the game.
+        /// </summary>
+        /// <param name="instance">The <see cref="SetupGame"/> instance representing the game setup.</param>
         public void OnGame(SetupGame instance)
         {
-            if(gameState == GameState.TeamXEditor)
+            var client = Plugin.Instance.client;
+            var multiplayer = Plugin.Instance.multiplayer;
+
+            if (gameState == GameState.TeamXEditor)
             {
                 gameState = GameState.TeamXGame;
             }
 
             if (gameState == GameState.TeamXGame)
             {
-                Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Race;
+                multiplayer.LocalPlayerMode = CharacterMode.Race;
 
-                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
+                if (client.ConnectionStatus == ConnectionStatus.Connected)
                 {
-                    Plugin.Instance.multiplayer.LocalPlayerMode = CharacterMode.Race;
+                    multiplayer.LocalPlayerMode = CharacterMode.Race;
                 }
             }
         }
 
+        /// <summary>
+        /// Handles actions to perform when spawning players in the game.
+        /// </summary>
+        /// <param name="instance">The <see cref="GameMaster"/> instance responsible for managing player spawns.</param>
         public void OnSpawnPlayers(GameMaster instance)
         {
-            if (gameState == GameState.TeamXGame)
+            var client = Plugin.Instance.client;
+
+            if (gameState == GameState.TeamXGame && client.ConnectionStatus == ConnectionStatus.Connected)
             {
-                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
+                var localRacer = instance.PlayersReady[0].transform;
+
+                if (localRacer.gameObject.GetComponent<PlayerObserver>() == null)
                 {
-                    Transform localRacer = instance.PlayersReady[0].transform;
-                    if (localRacer.gameObject.GetComponent<PlayerObserver>() == null)
-                    {
-                        localRacer.gameObject.AddComponent<PlayerObserver>();
-                    }
+                    localRacer.gameObject.AddComponent<PlayerObserver>();
                 }
             }
         }
 
+        /// <summary>
+        /// Called from a Player Observer script when the transform changes. Sends the player's updated transform to the server.
+        /// </summary>
+        /// <param name="stateData">The <see cref="PlayerStateData"/> containing the player's transform data.</param>
         public void OnLocalTransformChange(PlayerStateData stateData)
         {
-            stateData.Mode = (byte)Plugin.Instance.multiplayer.LocalPlayerMode;
-            Plugin.Instance.client.SendPlayerState(stateData);
+            var multiplayer = Plugin.Instance.multiplayer;
+            var client = Plugin.Instance.client;
+
+            stateData.Mode = (byte)multiplayer.LocalPlayerMode;
+            client.SendPlayerState(stateData);
         }
 
+        /// <summary>
+        /// Handles changes in the player's state while racing (e.g., Soapbox, Paraglider).
+        /// </summary>
+        /// <param name="state">The new state of the player.</param>
         public void OnStateChange(byte state)
         {
-            if (gameState == GameState.TeamXGame)
+            var client = Plugin.Instance.client;
+            var multiplayer = Plugin.Instance.multiplayer;
+
+            if (gameState == GameState.TeamXGame && client.ConnectionStatus == ConnectionStatus.Connected)
             {
-                if (Plugin.Instance.client.ConnectionStatus == ConnectionStatus.Connected)
-                {
-                    if (state == (byte)3)
-                    {
-                        Plugin.Instance.multiplayer.LocalPlayerMode = (CharacterMode)2;
-                    }
-                    else
-                    {
-                        Plugin.Instance.multiplayer.LocalPlayerMode = (CharacterMode)1;
-                    }
-                }
+                multiplayer.LocalPlayerMode = state == 3 ? (CharacterMode)2 : (CharacterMode)1;
             }
         }
 
+        /// <summary>
+        /// Loads the editor scene from the game.
+        /// </summary>
         public void LoadIntoEditorX()
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("LevelEditor2");
