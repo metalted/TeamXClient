@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using HarmonyLib;
 
 namespace TeamX
 {
@@ -92,7 +93,7 @@ namespace TeamX
         /// <summary>
         /// Inspects the current selection, detecting additions and removals compared to the last selection.
         /// </summary>
-        private void InspectSelection()
+        public void InspectSelection()
         {
             // Clear current UIDs and populate with the current selection.
             currentUIDs.Clear();
@@ -121,6 +122,30 @@ namespace TeamX
             {
                 Plugin.Instance.editor.OnBlocksAddedToSelection(new List<string>(addedUIDs));
                 addedUIDs.Clear();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(LEV_GizmoHandler), "DuplicateSelectedObjects")]
+    public class LEVGizmoHandlerDuplicateSelectedObjectsPatch
+    {
+        public static void Postfix()
+        {
+            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
+            {
+                Plugin.Instance.editor.SelectionObserver.InspectSelection();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(LEV_Selection), "DeselectAllBlocks")]
+    public class LEVSelectionDeselectAllBlocksPatch
+    {
+        public static void Postfix()
+        {
+            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
+            {
+                Plugin.Instance.editor.SelectionObserver.InspectSelection();
             }
         }
     }

@@ -66,10 +66,13 @@ namespace TeamX
         /// <param name="playerData">The player data to set.</param>
         public void SetPlayerData(PlayerData playerData)
         {
+            Debug.LogWarning("Setting player data in Shpleeble.");
             this.playerData = playerData;
-
+            Debug.LogWarning("Setting name in Shpleeble.");
             SetName(playerData.name);
+            Debug.LogWarning("Setting cosmetics in Shpleeble.");
             SetCosmetics(playerData.ToCosmeticsV16());
+            Debug.LogWarning("Setting mode in Shpleeble.");
             SetMode(playerData.state);
         }
 

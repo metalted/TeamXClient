@@ -63,8 +63,8 @@ namespace TeamX
         /// <returns>The converted cosmetics data.</returns>
         public CosmeticsV16 ToCosmeticsV16()
         {
-            CosmeticsV16 cosmetics = new();
-            ZeepkistNetworking.CosmeticIDs cosmeticIDs = new()
+            CosmeticsV16 cosmetics = new CosmeticsV16();
+            ZeepkistNetworking.CosmeticIDs cosmeticIDs = new ZeepkistNetworking.CosmeticIDs()
             {
                 zeepkist = zeepkist,
                 frontWheels = frontWheels,
@@ -81,6 +81,8 @@ namespace TeamX
                 color = color
             };
             cosmetics.IDsToCosmetics(cosmeticIDs);
+
+            Debug.LogWarning("Cosmetics");
             return cosmetics;
         }
     }
@@ -119,7 +121,12 @@ namespace TeamX
 
     public static class Utils
     {
-        public static Shpleeble shpleeblePrefab;       
+        public static Shpleeble shpleeblePrefab = null;      
+        
+        public static bool IsBlockSelected(string UID)
+        {
+            return Plugin.Instance.editor.Central.selection.list.Any(b => b.UID == UID);
+        }
 
         public static BlockPropertyJSON GetFixedJSONBlock(string blockJSON)
         {
@@ -146,7 +153,7 @@ namespace TeamX
                 ZeepkistNetworking.CosmeticIDs cosmeticIDs = ProgressionManager.Instance.GetAdventureCosmetics();
 
                 playerData.name = PlayerManager.Instance.steamAchiever.GetPlayerName(false);
-                playerData.steamID = PlayerManager.Instance.steamAchiever.GetPlayerSteamID();
+                playerData.steamID = Plugin.Instance.client.ClientSteamID;
                 playerData.zeepkist = cosmeticIDs.zeepkist;
                 playerData.frontWheels = cosmeticIDs.frontWheels;
                 playerData.rearWheels = cosmeticIDs.rearWheels;
@@ -188,15 +195,21 @@ namespace TeamX
 
         public static Shpleeble CreateShpleeble(PlayerData playerData)
         {
-            if(shpleeblePrefab != null)
+            if(shpleeblePrefab == null)
             {
+                Debug.LogError("Shpleeble Prefab is null?");
                 return null;
             }
 
-            Shpleeble s = GameObject.Instantiate<Shpleeble>(shpleeblePrefab);
+            Plugin.Instance.Log($"Creating shpleeble for player with steamID {playerData.steamID}.");
+            Shpleeble s = GameObject.Instantiate(shpleeblePrefab.gameObject).GetComponent<Shpleeble>();
+            Debug.LogError("Sphleeble is now: " + s);
             GameObject.DontDestroyOnLoad(s.gameObject);
+            Debug.LogError("CAlling dont destroy on load!");
             s.SetPlayerData(playerData);
+            Debug.LogError("Set playerData ");
             s.Activate();
+            Debug.LogError("Set ACtive! ");
             return s;
         }
 
@@ -207,8 +220,10 @@ namespace TeamX
                 return;
             }
 
-            NetworkedGhostSpawner networkedGhostSpawner = GameObject.FindObjectOfType<NetworkedGhostSpawner>();
+            NetworkedGhostSpawner networkedGhostSpawner = GameObject.FindObjectOfType<NetworkedGhostSpawner>(true);
             if(networkedGhostSpawner == null) { return; }
+
+            Plugin.Instance.Log("Creating Shpleeble Prefab");
 
             Shpleeble shpleeble = new GameObject("Shpleeble").AddComponent<Shpleeble>();
             GameObject.DontDestroyOnLoad(shpleeble);
@@ -265,6 +280,8 @@ namespace TeamX
                 t.gameObject.SetActive(true);
             }
             paragliderModel.SetActive(false);
+
+            Debug.LogWarning($"Soapbox: {soapbox}, Cameraman: {cameraMan}, DisplayName: {displayName}, Horn: {hornModel}, Paraglider: {paragliderModel}, Camera: {camera}, ArmatureTop: {armatureTop}");
 
             shpleeble.SetObjects(soapbox, cameraMan, displayName, hornModel, paragliderModel, camera, armatureTop);
             shpleeble.gameObject.SetActive(false);

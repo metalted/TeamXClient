@@ -165,7 +165,7 @@ namespace TeamX
 
             if (ConnectionStatus != ConnectionStatus.Connecting && ConnectionStatus != ConnectionStatus.Connected && ConnectionStatus != ConnectionStatus.Disconnecting)
             {
-                Plugin.Instance.Log("Cannot read messages: Client is not connected or (dis)connecting.");
+                //Plugin.Instance.Log("Cannot read messages: Client is not connected or (dis)connecting.");
                 return;
             }
 
@@ -701,6 +701,12 @@ namespace TeamX
             var outgoingMessage = client.CreateMessage();
             PacketUtility.Pack(blockCreate, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+
+            //Is this block part of the selection?
+            if(Utils.IsBlockSelected(block.UID))
+            {
+                SendSelection(block.UID);
+            }
         }
 
         /// <summary>

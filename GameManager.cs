@@ -39,6 +39,7 @@ namespace TeamX
         public void OnMainMenu()
         {
             Plugin.Instance.Initialize();
+
             var client = Plugin.Instance.client;            
 
             if (gameState == GameState.TeamXEditor || client.ConnectionStatus == ConnectionStatus.Connected)
@@ -58,6 +59,7 @@ namespace TeamX
             }
 
             gameState = GameState.MainMenu;
+
             Utils.CreateShpleeblePrefabInMainMenu();
         }
 
