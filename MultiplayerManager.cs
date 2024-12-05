@@ -48,12 +48,10 @@ namespace TeamX
                 return;
             }
 
-            Plugin.Instance.Log($"Adding player to multiplayer manager with steamID: {playerData.steamID}.");
             players.Add(playerData.steamID, playerData);
 
             Shpleeble newPlayer = Utils.CreateShpleeble(playerData);
 
-            Plugin.Instance.Log($"The newPlayer shpleeble: {newPlayer}.");
             if (newPlayer != null)
             {
                 playerCharacters.Add(playerData.steamID, newPlayer);

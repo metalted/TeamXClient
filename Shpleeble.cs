@@ -60,19 +60,37 @@ namespace TeamX
             return active;
         }
 
+        public void Initialize()
+        {
+            //Is required to get back the references to the objects $apparently.
+            soapbox = transform.GetChild(0).GetComponent<SetupModelCar>();
+            cameraMan = transform.GetChild(1).GetComponent<SetupModelCar>();
+            displayName = transform.GetChild(2).GetComponent<TextMeshPro>();
+            hornModel = soapbox.transform.Find("Visible Horn").gameObject;
+            paragliderModel = soapbox.transform.Find("Glider").gameObject;
+            camera = cameraMan.transform.Find("Character/Armature/Top/Right Arm/Camera").gameObject;
+            armatureTop = cameraMan.transform.Find("Character/Armature/Top");
+
+            //Remove the hoethouder
+            displayName.transform.GetChild(1).gameObject.SetActive(false);
+
+            //Remove the ghost wheels
+            Ghost_AnimateWheel_v16[] ghostWheels = soapbox.GetComponentsInChildren<Ghost_AnimateWheel_v16>();
+            foreach(var w in ghostWheels)
+            {
+                w.enabled = false;
+            }       
+        }
+
         /// <summary>
         /// Sets the player data associated with this Shpleeble and updates its appearance and mode.
         /// </summary>
         /// <param name="playerData">The player data to set.</param>
         public void SetPlayerData(PlayerData playerData)
         {
-            Debug.LogWarning("Setting player data in Shpleeble.");
             this.playerData = playerData;
-            Debug.LogWarning("Setting name in Shpleeble.");
             SetName(playerData.name);
-            Debug.LogWarning("Setting cosmetics in Shpleeble.");
             SetCosmetics(playerData.ToCosmeticsV16());
-            Debug.LogWarning("Setting mode in Shpleeble.");
             SetMode(playerData.state);
         }
 
@@ -121,7 +139,7 @@ namespace TeamX
         /// <param name="name">The name to display.</param>
         public void SetName(string name)
         {
-            displayName.text = name;
+            displayName.text = name;         
         }
 
         /// <summary>

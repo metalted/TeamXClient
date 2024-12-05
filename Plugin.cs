@@ -3,11 +3,6 @@ using HarmonyLib;
 using System;
 using UnityEngine;
 
-//TODO:
-//Done, but doesnt work on duplication on creation !!! When a player creates or duplicates a block, check if the block is part of the selection, so we can claim that.
-//Done? Also for DeselectAllBlocks. When duplicating a block, we need to make sure we deselect the duplicated one (or the new one depending on how zeepkist handles it).
-//Shpleebles are being giant dicks.
-
 namespace TeamX
 {
     [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
@@ -84,6 +79,7 @@ namespace TeamX
                 if (Input.GetKeyDown(KeyCode.P))
                 {
                     Log("Connecting...");
+
                     try
                     {
                         // Attempt to connect to the server

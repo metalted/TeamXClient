@@ -81,8 +81,6 @@ namespace TeamX
                 color = color
             };
             cosmetics.IDsToCosmetics(cosmeticIDs);
-
-            Debug.LogWarning("Cosmetics");
             return cosmetics;
         }
     }
@@ -197,19 +195,14 @@ namespace TeamX
         {
             if(shpleeblePrefab == null)
             {
-                Debug.LogError("Shpleeble Prefab is null?");
                 return null;
             }
 
-            Plugin.Instance.Log($"Creating shpleeble for player with steamID {playerData.steamID}.");
             Shpleeble s = GameObject.Instantiate(shpleeblePrefab.gameObject).GetComponent<Shpleeble>();
-            Debug.LogError("Sphleeble is now: " + s);
+            s.Initialize();
             GameObject.DontDestroyOnLoad(s.gameObject);
-            Debug.LogError("CAlling dont destroy on load!");
             s.SetPlayerData(playerData);
-            Debug.LogError("Set playerData ");
             s.Activate();
-            Debug.LogError("Set ACtive! ");
             return s;
         }
 
@@ -279,9 +272,7 @@ namespace TeamX
             {
                 t.gameObject.SetActive(true);
             }
-            paragliderModel.SetActive(false);
-
-            Debug.LogWarning($"Soapbox: {soapbox}, Cameraman: {cameraMan}, DisplayName: {displayName}, Horn: {hornModel}, Paraglider: {paragliderModel}, Camera: {camera}, ArmatureTop: {armatureTop}");
+            paragliderModel.SetActive(false);           
 
             shpleeble.SetObjects(soapbox, cameraMan, displayName, hornModel, paragliderModel, camera, armatureTop);
             shpleeble.gameObject.SetActive(false);
