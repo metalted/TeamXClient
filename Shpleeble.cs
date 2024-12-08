@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Represents a Shpleeble character in the game, capable of moving, rotating, and updating its state based on player data and mode.
@@ -41,6 +41,7 @@ namespace TeamX
         public void Activate()
         {
             active = true;
+            gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -49,6 +50,7 @@ namespace TeamX
         public void Deactivate()
         {
             active = false;
+            gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -71,15 +73,22 @@ namespace TeamX
             camera = cameraMan.transform.Find("Character/Armature/Top/Right Arm/Camera").gameObject;
             armatureTop = cameraMan.transform.Find("Character/Armature/Top");
 
-            //Remove the hoethouder
-            displayName.transform.GetChild(1).gameObject.SetActive(false);
+            try
+            {
+                //Remove the hoethouder
+                displayName.transform.GetChild(1).gameObject.SetActive(false);
+            }
+            catch
+            {
+                Debug.Log("No hoethouder");
+            }
 
             //Remove the ghost wheels
             Ghost_AnimateWheel_v16[] ghostWheels = soapbox.GetComponentsInChildren<Ghost_AnimateWheel_v16>();
             foreach(var w in ghostWheels)
             {
                 w.enabled = false;
-            }       
+            }            
         }
 
         /// <summary>

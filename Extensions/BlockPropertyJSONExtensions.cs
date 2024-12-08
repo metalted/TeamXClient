@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace TeamX.Extensions
+namespace TeamXClient.Extensions
 {
     /// <summary>
     /// Provides extension methods for the <see cref="BlockPropertyJSON"/> class.

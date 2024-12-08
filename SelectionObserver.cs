@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using HarmonyLib;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Observes changes in the current block selection within the editor and notifies the editor manager of any additions or removals.
@@ -93,7 +93,7 @@ namespace TeamX
         /// <summary>
         /// Inspects the current selection, detecting additions and removals compared to the last selection.
         /// </summary>
-        public void InspectSelection()
+        public void InspectSelection(bool notify = true)
         {
             // Clear current UIDs and populate with the current selection.
             currentUIDs.Clear();
@@ -114,13 +114,20 @@ namespace TeamX
             // Notify the editor of changes.
             if (removedUIDs.Count > 0)
             {
-                Plugin.Instance.editor.OnBlocksRemovedFromSelection(new List<string>(removedUIDs));
+                if (notify)
+                {
+                    Plugin.Instance.editor.OnBlocksRemovedFromSelection(new List<string>(removedUIDs));
+                }
+                    
                 removedUIDs.Clear();
             }
 
             if (addedUIDs.Count > 0)
             {
-                Plugin.Instance.editor.OnBlocksAddedToSelection(new List<string>(addedUIDs));
+                if (notify)
+                {
+                    Plugin.Instance.editor.OnBlocksAddedToSelection(new List<string>(addedUIDs));
+                }
                 addedUIDs.Clear();
             }
         }
@@ -140,6 +147,18 @@ namespace TeamX
 
     [HarmonyPatch(typeof(LEV_Selection), "DeselectAllBlocks")]
     public class LEVSelectionDeselectAllBlocksPatch
+    {
+        public static void Postfix()
+        {
+            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
+            {
+                Plugin.Instance.editor.SelectionObserver.InspectSelection();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(LEV_Selection), "ClickBuilding")]
+    public class LEVSelectionClickBuilding
     {
         public static void Postfix()
         {

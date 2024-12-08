@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Represents a block in the editor or game world, containing properties for position,

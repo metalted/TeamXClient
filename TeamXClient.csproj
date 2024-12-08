@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>TeamX</AssemblyName>
+    <AssemblyName>TeamXClient</AssemblyName>
     <Description>TeamX</Description>
     <Version>1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

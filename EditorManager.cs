@@ -6,10 +6,10 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TeamX.Extensions;
+using TeamXClient.Extensions;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Manages the editor's state, including blocks, floors, and skyboxes, 

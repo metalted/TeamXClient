@@ -3,7 +3,7 @@ using HarmonyLib;
 using System;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
     public class Plugin : BaseUnityPlugin
@@ -21,7 +21,8 @@ namespace TeamX
 
         public Client client;
 
-        private bool init = false;       
+        private bool init = false;
+        public int logLevel = 1;
 
         private void Awake()
         {
@@ -44,12 +45,13 @@ namespace TeamX
                 return;
             }
 
-            Log("Initializing TeamX...");
+            Log("Initializing TeamX...", LogType.Message);
+
             ulong sid = PlayerManager.Instance.steamAchiever.GetPlayerSteamID();
             sid += ((uint)UnityEngine.Random.Range(100, 1000));
             Debug.LogWarning("Generated STEAM ID: " + sid);
-            client = new Client(sid);
 
+            client = new Client(sid);
             init = true;
         }
 
@@ -63,12 +65,12 @@ namespace TeamX
             catch (InvalidOperationException ex)
             {
                 // Handle issues with client initialization or connection state
-                Console.WriteLine($"Operation failed: {ex.Message}");
+                //Console.WriteLine($"Operation failed: {ex.Message}");
             }
             catch (Exception ex)
             {
                 // Catch any unexpected exceptions
-                Console.WriteLine($"Unexpected error: {ex.Message}");
+                //Console.WriteLine($"Unexpected error: {ex.Message}");
             }
         }
 
@@ -78,28 +80,28 @@ namespace TeamX
             {
                 if (Input.GetKeyDown(KeyCode.P))
                 {
-                    Log("Connecting...");
+                    Log("Connecting...", LogType.Message);
 
                     try
                     {
                         // Attempt to connect to the server
                         client.Connect("127.0.0.1", 8080);
-                        Console.WriteLine("Successfully connecting to the server.");
+                        Log("Successfully connecting to the server.", LogType.Message);
                     }
                     catch (ArgumentException ex)
                     {
                         // Handle invalid IP address or port
-                        Console.WriteLine($"Invalid input: {ex.Message}");
+                        //Console.WriteLine($"Invalid input: {ex.Message}");
                     }
                     catch (InvalidOperationException ex)
                     {
                         // Handle issues with client initialization or connection state
-                        Console.WriteLine($"Operation failed: {ex.Message}");
+                        //Console.WriteLine($"Operation failed: {ex.Message}");
                     }
                     catch (Exception ex)
                     {
                         // Catch any unexpected exceptions
-                        Console.WriteLine($"Unexpected error: {ex.Message}");
+                        //Console.WriteLine($"Unexpected error: {ex.Message}");
                     }
                 }
 
@@ -109,14 +111,50 @@ namespace TeamX
                 }
                 catch (InvalidOperationException ex)
                 {
-                    Plugin.Instance.Log($"Error: {ex.Message}");
+                    Plugin.Instance.Log($"Error: {ex.Message}", LogType.Error);
                 }
+            }
+
+            if(Input.GetKeyDown(KeyCode.O))
+            {
+                PlayerData pd = Utils.GetLocalPlayerData();
+                Shpleeble newPlayer = Utils.CreateShpleeble(pd);
             }
         }
 
-        public void Log(string message)
+        public void Log(string message, LogType logType, bool header = true)
         {
-            Logger.LogInfo(message);
+            var previousColor = Console.ForegroundColor;
+
+            switch (logType)
+            {
+                case LogType.Debug:
+                    if (logLevel <= 0)
+                    {
+                        Logger.LogInfo($" {(header ? "[TEAMX]" : "")} {message}");
+                    }
+                    break;
+                case LogType.Message:
+                    if (logLevel <= 1)
+                    {
+                        Logger.LogInfo($" {(header ? "[TEAMX]" : "")} {message}");
+                    }
+                    break;
+                case LogType.Warning:
+                    if (logLevel <= 2)
+                    {
+                        Logger.LogWarning($" {(header ? "[TEAMX]" : "")} {message}");
+                    }
+                    break;
+                case LogType.Error:
+                    if (logLevel <= 3)
+                    {
+                        Logger.LogError($" {(header ? "[TEAMX]" : "")} {message}");
+                    }
+                    break;
+            }
+
+            Console.ForegroundColor = previousColor;
         }
     }
 }

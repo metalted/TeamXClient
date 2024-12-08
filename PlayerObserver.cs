@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Observes the player's position and rotation in the scene and sends updates to the game if changes occur.

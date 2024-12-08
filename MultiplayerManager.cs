@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Manages multiplayer functionality, including players, their states, and their in-game representations (Shpleeble).
@@ -44,7 +44,7 @@ namespace TeamX
         {
             if (players.ContainsKey(playerData.steamID))
             {
-                Plugin.Instance.Log($"Player with SteamID {playerData.steamID} already exists.");
+                Plugin.Instance.Log($"Player with SteamID {playerData.steamID} already exists.", LogType.Warning);
                 return;
             }
 
@@ -55,11 +55,11 @@ namespace TeamX
             if (newPlayer != null)
             {
                 playerCharacters.Add(playerData.steamID, newPlayer);
-                Plugin.Instance.Log($"Added player with SteamID {playerData.steamID} and created their Shpleeble.");
+                Plugin.Instance.Log($"Added player with SteamID {playerData.steamID} and created their Shpleeble.", LogType.Message);
             }
             else
             {
-                Plugin.Instance.Log($"Failed to create Shpleeble for player with SteamID {playerData.steamID}.");
+                Plugin.Instance.Log($"Failed to create Shpleeble for player with SteamID {playerData.steamID}.", LogType.Warning);
             }
         }
 
@@ -71,11 +71,11 @@ namespace TeamX
         {
             if (players.Remove(steamID))
             {
-                Plugin.Instance.Log($"Player with SteamID {steamID} removed from the players dictionary.");
+                Plugin.Instance.Log($"Player with SteamID {steamID} removed from the players dictionary.", LogType.Message);
             }
             else
             {
-                Plugin.Instance.Log($"Player with SteamID {steamID} not found in the players dictionary.");
+                Plugin.Instance.Log($"Player with SteamID {steamID} not found in the players dictionary.", LogType.Warning);
             }
 
             if (playerCharacters.TryGetValue(steamID, out Shpleeble shpleeble))
@@ -86,11 +86,11 @@ namespace TeamX
                 }
 
                 playerCharacters.Remove(steamID);
-                Plugin.Instance.Log($"Shpleeble with SteamID {steamID} removed from the game.");
+                Plugin.Instance.Log($"Shpleeble with SteamID {steamID} removed from the game.", LogType.Debug);
             }
             else
             {
-                Plugin.Instance.Log($"Shpleeble with SteamID {steamID} not found in the playerCharacters dictionary.");
+                Plugin.Instance.Log($"Shpleeble with SteamID {steamID} not found in the playerCharacters dictionary.", LogType.Warning);
             }
         }
 
@@ -106,16 +106,25 @@ namespace TeamX
                 {
                     shpleeble.UpdateTransform(playerState.Position, playerState.Rotation);
                     shpleeble.SetMode(playerState.Mode);
-                    Plugin.Instance.Log($"Updated state for player with SteamID {playerState.SteamID}.");
+                    Plugin.Instance.Log($"Updated state for player with SteamID {playerState.SteamID}.", LogType.Debug);
                 }
                 else
                 {
-                    Plugin.Instance.Log($"Shpleeble with SteamID {playerState.SteamID} is null and cannot be updated.");
+                    Plugin.Instance.Log($"Shpleeble with SteamID {playerState.SteamID} is null and cannot be updated.", LogType.Warning);
                 }
             }
             else
             {
-                Plugin.Instance.Log($"Shpleeble with SteamID {playerState.SteamID} not found in the playerCharacters dictionary.");
+                Plugin.Instance.Log($"Shpleeble with SteamID {playerState.SteamID} not found in the playerCharacters dictionary.", LogType.Warning);
+            }
+        }
+
+        public void ClearAllData()
+        {
+            List<ulong> ids = players.Keys.ToList();
+            foreach(ulong id in ids)
+            {
+                RemovePlayer(id);
             }
         }
     }

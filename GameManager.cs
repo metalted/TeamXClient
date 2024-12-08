@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Manages the game's state and transitions between different states such as MainMenu, LevelEditor, and Game.
@@ -61,6 +61,7 @@ namespace TeamX
             gameState = GameState.MainMenu;
 
             Utils.CreateShpleeblePrefabInMainMenu();
+            Plugin.Instance.multiplayer.ClearAllData();
         }
 
         /// <summary>

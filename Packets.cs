@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using TeamX.Extensions;
+using TeamXClient.Extensions;
 
-namespace TeamX
+namespace TeamXClient
 {
     public enum PermissionLevel
     {
@@ -60,7 +60,7 @@ namespace TeamX
         {
             ushort packetId = (ushort)(packetType.Name.GetStableHashCode() & ushort.MaxValue);
             PacketTypeRegistry[packetId] = packetType;
-            Plugin.Instance.Log($"Registering: {packetType.Name}, Packet ID: {packetId}");
+            Plugin.Instance.Log($"Registering: {packetType.Name}, Packet ID: {packetId}", LogType.Debug);
         }
 
         /// <summary>

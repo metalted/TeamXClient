@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using TeamX.Extensions;
+using TeamXClient.Extensions;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Represents a client in the network.
@@ -184,7 +184,7 @@ namespace TeamX
                         break;
 
                     default:
-                        Plugin.Instance.Log($"Unhandled message type: {im.MessageType}");
+                        Plugin.Instance.Log($"Unhandled message type: {im.MessageType}", LogType.Warning);
                         break;
                 }
             }
@@ -200,13 +200,13 @@ namespace TeamX
             {
                 case NetConnectionStatus.Connected:
                     ConnectionStatus = ConnectionStatus.Connected;
-                    Plugin.Instance.Log("ConnectionStatus: Connected!");
+                    Plugin.Instance.Log("ConnectionStatus: Connected!", LogType.Message);
                     HandleHandshakeRequest();
                     break;
 
                 case NetConnectionStatus.Disconnected:
                     ConnectionStatus = ConnectionStatus.Disconnected;
-                    Plugin.Instance.Log("ConnectionStatus: Disconnected!");
+                    Plugin.Instance.Log("ConnectionStatus: Disconnected!", LogType.Message);
                     break;
             }
         }
@@ -225,7 +225,7 @@ namespace TeamX
                 {
                     var packet = (IPacket)Activator.CreateInstance(packetType);
                     packet.Deserialize(message);
-                    Plugin.Instance.Log($"Received packet of type: {packetType.Name}");
+                    Plugin.Instance.Log($"Received packet of type: {packetType.Name}", LogType.Debug);
 
                     try
                     {
@@ -233,25 +233,25 @@ namespace TeamX
                     }
                     catch (ArgumentNullException ex)
                     {
-                        Plugin.Instance.Log($"Error: {ex.Message}");
+                        Plugin.Instance.Log($"Error: {ex.Message}", LogType.Error);
                     }
                     catch (InvalidOperationException ex)
                     {
-                        Plugin.Instance.Log($"Error: {ex.Message}");
+                        Plugin.Instance.Log($"Error: {ex.Message}", LogType.Error);
                     }
                     catch (Exception ex)
                     {
-                        Plugin.Instance.Log($"Unexpected error: {ex.Message}");
+                        Plugin.Instance.Log($"Unexpected error: {ex.Message}", LogType.Error);
                     }
                 }
                 else
                 {
-                    Plugin.Instance.Log($"Unknown packet ID: {packetId}");
+                    Plugin.Instance.Log($"Unknown packet ID: {packetId}", LogType.Warning);
                 }
             }
             else
             {
-                Plugin.Instance.Log("Failed to unpack the message.");
+                Plugin.Instance.Log("Failed to unpack the message.", LogType.Warning);
             }
         }
 

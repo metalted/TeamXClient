@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace TeamX.Extensions
+namespace TeamXClient.Extensions
 {
     /// <summary>
     /// Provides JSON serialization and deserialization methods for the <see cref="Block"/> class.

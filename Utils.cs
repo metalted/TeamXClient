@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Represents the current connection status of a client.
@@ -19,6 +19,8 @@ namespace TeamX
         Connected,
         Disconnecting
     }
+
+    public enum LogType { Debug = 0, Message = 1, Warning = 2, Error = 3 }
 
     /// <summary>
     /// Defines the modes a player character can be in.
@@ -216,7 +218,7 @@ namespace TeamX
             NetworkedGhostSpawner networkedGhostSpawner = GameObject.FindObjectOfType<NetworkedGhostSpawner>(true);
             if(networkedGhostSpawner == null) { return; }
 
-            Plugin.Instance.Log("Creating Shpleeble Prefab");
+            Plugin.Instance.Log("Creating Shpleeble Prefab", LogType.Debug);
 
             Shpleeble shpleeble = new GameObject("Shpleeble").AddComponent<Shpleeble>();
             GameObject.DontDestroyOnLoad(shpleeble);

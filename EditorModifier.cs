@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TeamX.Extensions;
+using TeamXClient.Extensions;
 using UnityEngine;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Provides functionality to modify the editor's state, including creating, updating, and destroying blocks,
@@ -158,11 +158,12 @@ namespace TeamX
 
             if (blockIndex != -1)
             {
-                Plugin.Instance.editor.SelectionObserver.Selection.RemoveBlockAt(blockIndex, true, true);
+                Plugin.Instance.editor.SelectionObserver.Selection.RemoveBlockAt(blockIndex, true, false);
 
                 if (!notify)
                 {
                     Plugin.Instance.editor.SelectionObserver.SyncListCount();
+                    Plugin.Instance.editor.SelectionObserver.InspectSelection(false);
                 }
             }
         }

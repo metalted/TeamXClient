@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace TeamX
+namespace TeamXClient
 {
     /// <summary>
     /// Observes and handles changes made in the editor, including block creation, updates, destruction,
