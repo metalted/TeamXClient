@@ -23,6 +23,7 @@ namespace TeamXClient
             MainMenu,
             WaitingForAccess,
             WaitingOnEditorDataInMainMenu,
+            WaitingOnServerRulesInMainMenu,
             EnteringTeamXFromMainMenu,
             TeamXEditor,
             TeamXGame

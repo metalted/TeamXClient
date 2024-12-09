@@ -171,6 +171,12 @@ namespace TeamXClient
             return block;
         }
 
+        public int GetBlockCountBy(ulong steamID)
+        {
+            int count = Blocks.Values.Count(block => block.SteamID == steamID);
+            return count;
+        }
+
         /// <summary>
         /// Updates the data of an existing block.
         /// </summary>

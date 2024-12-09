@@ -103,7 +103,13 @@ namespace TeamXClient
 
             if (blockProperties != null)
             {
-                editor.Central.undoRedo.allBlocksDictionary.Remove(uid);
+                //Make sure its deselected
+                bool isSelected = editor.Central.selection.list.Any(block => block.UID == blockProperties.UID);
+                if(isSelected)
+                {
+                    DeselectBlock(blockProperties.UID);
+                }
+
                 GameObject.Destroy(blockProperties.gameObject);
                 editor.Central.validation.RecalcBlocksAndDraw(false);
             }

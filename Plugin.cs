@@ -115,11 +115,13 @@ namespace TeamXClient
                 }
             }
 
+            /*
             if(Input.GetKeyDown(KeyCode.O))
             {
                 PlayerData pd = Utils.GetLocalPlayerData();
                 Shpleeble newPlayer = Utils.CreateShpleeble(pd);
             }
+            */
         }
 
         public void Log(string message, LogType logType, bool header = true)

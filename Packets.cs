@@ -436,6 +436,36 @@ namespace TeamXClient
         }
     }
 
+    public struct ServerRulesRequestPacket : IPacket
+    {
+        public ulong SteamID;
+
+        public void Deserialize(NetIncomingMessage im)
+        {
+            SteamID = im.ReadUInt64();
+        }
+
+        public void Serialize(NetOutgoingMessage om)
+        {
+            om.Write(SteamID);
+        }
+    }
+
+    public struct ServerRulesResponsePacket : IPacket
+    {
+        public int MaxBlockCount;
+
+        public void Deserialize(NetIncomingMessage im)
+        {
+            MaxBlockCount = im.ReadInt32();
+        }
+
+        public void Serialize(NetOutgoingMessage om)
+        {
+            om.Write(MaxBlockCount);
+        }
+    }
+
     /// <summary>
     /// Represents a packet sent to the server to notify about a new block, or sent from the server to the client to notify about another players block creation.
     /// </summary>

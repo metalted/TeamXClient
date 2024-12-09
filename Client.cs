@@ -302,6 +302,9 @@ namespace TeamXClient
                 case EditorStateResponsePacket editorStateResponse:
                     HandleEditorState(editorStateResponse);
                     break;
+                case ServerRulesResponsePacket serverRulesResponse:
+                    HandleServerRules(serverRulesResponse);
+                    break;
                 case EditorBlockCreatePacket editorBlockCreatePacket:
                     HandleEditorBlockCreate(editorBlockCreatePacket);
                     break;
@@ -509,6 +512,26 @@ namespace TeamXClient
 
             if (Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnEditorDataInMainMenu)
             {
+                //Request the ServerRulesPacket which we need to apply before we load the editor.
+                ServerRulesRequestPacket serverRules = new ServerRulesRequestPacket()
+                {
+                    SteamID = ClientSteamID
+                };
+
+                var outgoingMessage = client.CreateMessage();
+                PacketUtility.Pack(serverRules, outgoingMessage);
+                client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+
+                Plugin.Instance.game.gameState = GameManager.GameState.WaitingOnServerRulesInMainMenu;
+            }
+        }
+
+        public void HandleServerRules(ServerRulesResponsePacket serverRules)
+        {
+            if(Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
+            {
+                Plugin.Instance.multiplayer.MaxBlockCount = serverRules.MaxBlockCount;
+
                 // Transition to the next state and load into the editor
                 Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
                 Plugin.Instance.game.LoadIntoEditorX();

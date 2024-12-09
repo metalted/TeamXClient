@@ -32,27 +32,36 @@ namespace TeamXClient
         /// <param name="afterState">The state of the block after creation.</param>
         public void BlockCreated(BlockPropertyJSON afterState)
         {
-            Block block = new Block()
+            int count = editor.GetBlockCountBy(Plugin.Instance.client.ClientSteamID);
+            if(count < Plugin.Instance.multiplayer.MaxBlockCount)
             {
-                ID = afterState.blockID,
-                PositionX = afterState.position.x,
-                PositionY = afterState.position.y,
-                PositionZ = afterState.position.z,
-                EulerAnglesX = afterState.eulerAngles.x,
-                EulerAnglesY = afterState.eulerAngles.y,
-                EulerAnglesZ = afterState.eulerAngles.z,
-                LocalScaleX = afterState.localScale.x,
-                LocalScaleY = afterState.localScale.y,
-                LocalScaleZ = afterState.localScale.z,
-                Properties = afterState.properties,
-                UID = afterState.UID,
-                SteamID = Plugin.Instance.client.ClientSteamID
-            };
+                Block block = new Block()
+                {
+                    ID = afterState.blockID,
+                    PositionX = afterState.position.x,
+                    PositionY = afterState.position.y,
+                    PositionZ = afterState.position.z,
+                    EulerAnglesX = afterState.eulerAngles.x,
+                    EulerAnglesY = afterState.eulerAngles.y,
+                    EulerAnglesZ = afterState.eulerAngles.z,
+                    LocalScaleX = afterState.localScale.x,
+                    LocalScaleY = afterState.localScale.y,
+                    LocalScaleZ = afterState.localScale.z,
+                    Properties = afterState.properties,
+                    UID = afterState.UID,
+                    SteamID = Plugin.Instance.client.ClientSteamID
+                };
 
-            //Store the block
-            editor.Add(block);
+                //Store the block
+                editor.Add(block);
 
-            Plugin.Instance.client.SendBlockCreate(block);
+                Plugin.Instance.client.SendBlockCreate(block);
+            }
+            //Not allowed
+            else
+            {
+                editor.Modifier.DestroyBlock(afterState.UID);
+            }
         }
 
         /// <summary>
@@ -64,6 +73,12 @@ namespace TeamXClient
         {
             //Get the block
             Block block = editor.Get(afterState.UID);
+
+            if(block == null)
+            {
+                Plugin.Instance.Log("BlockUpdate: Block = null", LogType.Error);
+                return;
+            }
             
             //Are we the creator or have enough permission?
             if(block != null && (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1))
@@ -114,6 +129,13 @@ namespace TeamXClient
         {
             //Get the block
             Block block = editor.Get(beforeState.UID);
+
+            if(block == null)
+            {
+                //This can happen with blocked creations in combination with control z
+                Plugin.Instance.Log("BlockDestroy: Block = null, probably ctrl-z.", LogType.Debug);
+                return;
+            }
 
             //Are we the creator or have enough permission?
             if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
