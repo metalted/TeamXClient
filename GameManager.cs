@@ -41,6 +41,8 @@ namespace TeamXClient
         {
             Plugin.Instance.Initialize();
 
+            Utils.GenerateLevelEditorOnlineButton();
+
             var client = Plugin.Instance.client;            
 
             if (gameState == GameState.TeamXEditor || client.ConnectionStatus == ConnectionStatus.Connected)

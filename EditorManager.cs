@@ -211,8 +211,7 @@ namespace TeamXClient
                 Block block = Get(uid);
                 if (block == null) continue;
 
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID ||
-                    (byte)Plugin.Instance.client.PermissionLevel > 1)
+                if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
                 {
                     Plugin.Instance.client.SendSelection(uid);
                 }
@@ -235,8 +234,7 @@ namespace TeamXClient
                 Block block = Get(uid);
                 if (block == null) continue;
 
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID ||
-                    (byte)Plugin.Instance.client.PermissionLevel > 1)
+                if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
                 {
                     Plugin.Instance.client.SendDeselection(uid);
                 }

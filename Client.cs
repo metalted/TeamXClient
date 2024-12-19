@@ -36,11 +36,6 @@ namespace TeamXClient
         /// <value>The connection status.</value>
         public ConnectionStatus ConnectionStatus { get; private set; }
         /// <summary>
-        /// Gets the current permission level for this client.
-        /// </summary>
-        /// <value>The permission level.</value>
-        public PermissionLevel PermissionLevel { get; private set; }
-        /// <summary>
         /// Gets the steam ID belonging to this client.
         /// </summary>
         /// <value>Steam ID of the client.</value>
@@ -433,7 +428,6 @@ namespace TeamXClient
             PacketUtility.Pack(editorRequest, outgoingMessage2);
             client.SendMessage(outgoingMessage2, NetDeliveryMethod.ReliableOrdered, 0);
 
-            PermissionLevel = (PermissionLevel)accessGranted.Level;
             Plugin.Instance.game.gameState = GameManager.GameState.WaitingOnEditorDataInMainMenu;
         }
 
@@ -528,13 +522,52 @@ namespace TeamXClient
 
         public void HandleServerRules(ServerRulesResponsePacket serverRules)
         {
-            if(Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
-            {
-                Plugin.Instance.multiplayer.MaxBlockCount = serverRules.MaxBlockCount;
+            PermissionSystemPermissions perms = new PermissionSystemPermissions();
+            perms.IsAdministrator = serverRules.IsAdministrator;
+            perms.CanJoin = serverRules.CanJoin;
+            perms.CanCreate = serverRules.CanCreate;
+            perms.CanEdit = serverRules.CanEdit;
+            perms.CanEditAll = serverRules.CanEditAll;
+            perms.CanEditFloor = serverRules.CanEditFloor;
+            perms.CanEditSkybox = serverRules.CanEditSkybox;
+            perms.CanDestroy = serverRules.CanDestroy;
+            perms.BlockLimit = serverRules.BlockLimit;
+            perms.BannedBlocks = serverRules.BannedBlocks;
 
-                // Transition to the next state and load into the editor
-                Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
-                Plugin.Instance.game.LoadIntoEditorX();
+            Plugin.Instance.Log($"Local permissions:{perms.IsAdministrator},{perms.CanJoin}, {perms.CanCreate}, {perms.CanEdit}, {perms.CanEditAll}, {perms.CanEditFloor}, {perms.CanEditSkybox}, {perms.CanDestroy}, {perms.BlockLimit}, {perms.BannedBlocks.Count}", LogType.Message);
+
+            //Store the server rules.
+            Plugin.Instance.multiplayer.perms = perms;            
+
+            if (Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
+            {
+                if (!perms.CanJoin)
+                {
+                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
+                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
+
+                    try
+                    {
+                        // Attempt to disconnect the client
+                        Plugin.Instance.client.Disconnect();
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        // Handle issues with client initialization or connection state
+                        Console.WriteLine($"Operation failed: {ex.Message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Catch any unexpected exceptions
+                        Console.WriteLine($"Unexpected error: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    // Transition to the next state and load into the editor
+                    Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
+                    Plugin.Instance.game.LoadIntoEditorX();
+                }
             }
         }
 

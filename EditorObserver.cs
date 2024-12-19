@@ -33,7 +33,7 @@ namespace TeamXClient
         public void BlockCreated(BlockPropertyJSON afterState)
         {
             int count = editor.GetBlockCountBy(Plugin.Instance.client.ClientSteamID);
-            if(count < Plugin.Instance.multiplayer.MaxBlockCount)
+            if(count < Plugin.Instance.multiplayer.perms.BlockLimit)
             {
                 Block block = new Block()
                 {
@@ -81,7 +81,7 @@ namespace TeamXClient
             }
             
             //Are we the creator or have enough permission?
-            if(block != null && (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1))
+            if(block != null && (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll))
             {
                 //Save the change
                 block.PositionX = afterState.position.x;
@@ -138,7 +138,7 @@ namespace TeamXClient
             }
 
             //Are we the creator or have enough permission?
-            if (block.SteamID == Plugin.Instance.client.ClientSteamID || (byte)Plugin.Instance.client.PermissionLevel > 1)
+            if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
             {
                 //Remove the block and send the update
                 string uid = block.UID;
@@ -161,7 +161,7 @@ namespace TeamXClient
         /// <param name="after">The floor state after the update.</param>
         public void FloorUpdated(int before, int after)
         {
-            if((byte) Plugin.Instance.client.PermissionLevel > 1)
+            if (Plugin.Instance.multiplayer.perms.CanEditFloor)
             {
                 editor.Floor = after;
 
@@ -181,7 +181,7 @@ namespace TeamXClient
         /// <param name="after">The skybox state after the update.</param>
         public void SkyboxUpdated(int before, int after)
         {
-            if ((byte)Plugin.Instance.client.PermissionLevel > 1)
+            if (Plugin.Instance.multiplayer.perms.CanEditSkybox)
             {
                 editor.Skybox = after;
 

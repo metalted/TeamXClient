@@ -27,7 +27,7 @@ namespace TeamXClient
         /// </summary>
         public CharacterMode LocalPlayerMode;
 
-        public int MaxBlockCount;
+        public PermissionSystemPermissions perms;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplayerManager"/> class.
