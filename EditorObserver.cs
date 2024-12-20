@@ -33,7 +33,9 @@ namespace TeamXClient
         public void BlockCreated(BlockPropertyJSON afterState)
         {
             int count = editor.GetBlockCountBy(Plugin.Instance.client.ClientSteamID);
-            if(count < Plugin.Instance.multiplayer.perms.BlockLimit)
+            bool isAllowed = Plugin.Instance.perms.CanCreate() && count < Plugin.Instance.perms.GetBlockLimit();
+            bool isBanned = Plugin.Instance.perms.IsBlockBanned(afterState.blockID);
+            if (isAllowed && !isBanned)
             {
                 Block block = new Block()
                 {
@@ -79,9 +81,11 @@ namespace TeamXClient
                 Plugin.Instance.Log("BlockUpdate: Block = null", LogType.Error);
                 return;
             }
-            
+
             //Are we the creator or have enough permission?
-            if(block != null && (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll))
+            bool isAllowed = (Plugin.Instance.perms.CanEdit() && block.SteamID == Plugin.Instance.client.ClientSteamID) || Plugin.Instance.perms.CanEditAll();
+                        
+            if (isAllowed)
             {
                 //Save the change
                 block.PositionX = afterState.position.x;
@@ -138,7 +142,9 @@ namespace TeamXClient
             }
 
             //Are we the creator or have enough permission?
-            if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
+            bool isAllowed = (Plugin.Instance.perms.CanDestroy() && block.SteamID == Plugin.Instance.client.ClientSteamID) || Plugin.Instance.perms.CanEditAll();
+
+            if (isAllowed)
             {
                 //Remove the block and send the update
                 string uid = block.UID;
@@ -161,7 +167,7 @@ namespace TeamXClient
         /// <param name="after">The floor state after the update.</param>
         public void FloorUpdated(int before, int after)
         {
-            if (Plugin.Instance.multiplayer.perms.CanEditFloor)
+            if (Plugin.Instance.perms.CanEditFloor())
             {
                 editor.Floor = after;
 
@@ -181,7 +187,7 @@ namespace TeamXClient
         /// <param name="after">The skybox state after the update.</param>
         public void SkyboxUpdated(int before, int after)
         {
-            if (Plugin.Instance.multiplayer.perms.CanEditSkybox)
+            if (Plugin.Instance.perms.CanEditSkybox())
             {
                 editor.Skybox = after;
 

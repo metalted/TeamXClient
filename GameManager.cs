@@ -39,12 +39,15 @@ namespace TeamXClient
         /// </summary>
         public void OnMainMenu()
         {
+            //Initialize the plugin when we entered the main menu.
             Plugin.Instance.Initialize();
 
+            //Create the blue button.
             Utils.GenerateLevelEditorOnlineButton();
 
             var client = Plugin.Instance.client;            
 
+            //When connected or coming from team x editor, make sure we disconnect.
             if (gameState == GameState.TeamXEditor || client.ConnectionStatus == ConnectionStatus.Connected)
             {
                 try
@@ -61,9 +64,13 @@ namespace TeamXClient
                 }
             }
 
+            //Set the new game state
             gameState = GameState.MainMenu;
 
+            //Create the shpleeble prefab if not done so already.
             Utils.CreateShpleeblePrefabInMainMenu();
+
+            //Clear all player data, like connected players and instantiated player models.
             Plugin.Instance.multiplayer.ClearAllData();
         }
 
@@ -81,7 +88,6 @@ namespace TeamXClient
             {
                 if (gameState == GameState.EnteringTeamXFromMainMenu)
                 {
-                    Debug.Log("Spawning players.");
                     gameState = GameState.TeamXEditor;
                 }
 
@@ -106,6 +112,8 @@ namespace TeamXClient
                     var central = editor.Central;
                     var globalLevel = central.testMap.GlobalLevel;
                     var manager = central.manager;
+
+                    Utils.DisableLoadButton();
 
                     if (!globalLevel.IsTestLevel)
                     {

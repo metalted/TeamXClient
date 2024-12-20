@@ -3,6 +3,22 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using System;
 using UnityEngine;
+using TeamXNetwork;
+
+/* Overview of scripts and to do's 
+ * Plugin.cs                Done 
+ * Block.cs                 Done
+ * Client.cs                Done
+ * EditorManager.cs         Done
+ * EditorModifier.cs        Done
+ * EditorObserver.cs        Done
+ * GameManager.cs           Done
+ * MultiplayerManager.cs    Done
+ * PlayerObserver.cs        Done
+ * SelectionObserver.cs     Done
+ * Shpleeble.cs             Done
+ * Utils.cs                 Done
+ */
 
 namespace TeamXClient
 {
@@ -16,15 +32,23 @@ namespace TeamXClient
 
         public static Plugin Instance;
         
+        //Manages multiplayer models and references.
         public MultiplayerManager multiplayer;
+        //Everything related to the level editor.
         public EditorManager editor;
+        //Game events.
         public GameManager game;
-
+        //Permission system.
+        public PermissionManager perms;
+        //Network interaction.
         public Client client;
 
+        //Creates the client if not initialized yet.
         private bool init = false;
+        //Which messages to show in the console (0 = debug, 1 = messages)
         public int logLevel = 1;
 
+        //Config settings for ip address and port.
         public ConfigEntry<string> cfg_serverIP;
         public ConfigEntry<int> cfg_serverPort;
 
@@ -40,6 +64,7 @@ namespace TeamXClient
             game = new GameManager();
             multiplayer = new MultiplayerManager();
             editor = new EditorManager();
+            perms = new PermissionManager();
 
             cfg_serverIP = Config.Bind("Settings", "Server IP", "127.0.0.1", "The IP address of the TeamX server");
             cfg_serverPort = Config.Bind("Settings", "Server Port", 8080, "The Port of the TeamX server.");
@@ -55,6 +80,8 @@ namespace TeamXClient
             Log("Initializing TeamX...", LogType.Message);
 
             ulong sid = PlayerManager.Instance.steamAchiever.GetPlayerSteamID();
+
+            //Some debug code to generate random player ids with only one player.
             //sid += ((uint)UnityEngine.Random.Range(100, 1000));
             //Debug.LogWarning("Generated STEAM ID: " + sid);
 
@@ -64,49 +91,11 @@ namespace TeamXClient
 
         public void OnApplicationQuit()
         {
-            try
+            if(client != null)
             {
-                // Attempt to disconnect the client
-                client.Disconnect();
+                client.AttemptDisconnect();
             }
-            catch (InvalidOperationException ex)
-            {
-                // Handle issues with client initialization or connection state
-                //Console.WriteLine($"Operation failed: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                // Catch any unexpected exceptions
-                //Console.WriteLine($"Unexpected error: {ex.Message}");
-            }
-        }
-
-        public void TryToConnectToServer()
-        {
-            Log("Connecting...", LogType.Message);
-
-            try
-            {
-                // Attempt to connect to the server
-                client.Connect(cfg_serverIP.Value, cfg_serverPort.Value);
-                Log("Successfully started connecting to the server.", LogType.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                // Handle invalid IP address or port
-                //Console.WriteLine($"Invalid input: {ex.Message}");
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Handle issues with client initialization or connection state
-                //Console.WriteLine($"Operation failed: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                // Catch any unexpected exceptions
-                //Console.WriteLine($"Unexpected error: {ex.Message}");
-            }
-        }
+        }        
 
         public void Update()
         {
@@ -118,7 +107,7 @@ namespace TeamXClient
                 }
                 catch (InvalidOperationException ex)
                 {
-                    Plugin.Instance.Log($"Error: {ex.Message}", LogType.Error);
+                    Log($"Error: {ex.Message}", LogType.Error);
                 }
             }
         }

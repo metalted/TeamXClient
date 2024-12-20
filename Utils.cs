@@ -117,21 +117,7 @@ namespace TeamXClient
             skybox = 0;
             blocks = new List<string>();
         }
-    }
-
-    public class PermissionSystemPermissions
-    {
-        public bool IsAdministrator { get; set; }
-        public bool CanJoin { get; set; }
-        public bool CanCreate { get; set; }
-        public bool CanEdit { get; set; }
-        public bool CanEditAll { get; set; }
-        public bool CanEditFloor { get; set; }
-        public bool CanEditSkybox { get; set; }
-        public bool CanDestroy { get; set; }
-        public int BlockLimit { get; set; }
-        public List<int> BannedBlocks = new List<int>();
-    }
+    }   
 
     public static class Utils
     {
@@ -340,8 +326,20 @@ namespace TeamXClient
         //When the custom button is clicked.
         public static void OnEditorOnlineButton()
         {
-            Plugin.Instance.TryToConnectToServer();
-            PlayerManager.Instance.weLoadedLevelEditorFromMainMenu = true;
+            try
+            {
+                Plugin.Instance.client.AttemptToConnectToServer();
+                PlayerManager.Instance.weLoadedLevelEditorFromMainMenu = true;
+            }
+            catch(Exception e)
+            {
+                Plugin.Instance.Log(e.Message, LogType.Error);
+
+                if(Plugin.Instance.client != null)
+                {
+                    Plugin.Instance.client.AttemptDisconnect();
+                }
+            }
         }
 
         //Grey out the load button in the level editor while in teamkist mode, because loading a level will mess up the server.

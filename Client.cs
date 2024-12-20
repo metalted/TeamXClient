@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lidgren.Network;
+using TeamXNetwork;
 using TeamXClient.Extensions;
 using UnityEngine;
 
@@ -145,6 +142,58 @@ namespace TeamXClient
             }
         }
 
+        public void AttemptToConnectToServer()
+        {
+            if (client == null)
+            {
+                throw new InvalidOperationException("Client is not initialized.");
+            }
+
+            Plugin.Instance.Log("Connecting...", LogType.Message);
+
+            try
+            {
+                // Attempt to connect to the server
+                client.Connect(Plugin.Instance.cfg_serverIP.Value, Plugin.Instance.cfg_serverPort.Value);
+                Plugin.Instance.Log("Successfully started connecting to the server.", LogType.Message);
+                ConnectionStatus = ConnectionStatus.Connecting;
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle invalid IP address or port
+                Plugin.Instance.Log($"Invalid input: {ex.Message}", LogType.Error);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Handle issues with client initialization or connection state
+                Plugin.Instance.Log($"Operation failed: {ex.Message}", LogType.Error);
+            }
+            catch (Exception ex)
+            {
+                // Catch any unexpected exceptions
+                Plugin.Instance.Log($"Unexpected error: {ex.Message}", LogType.Error);
+            }
+        }
+
+        public void AttemptDisconnect()
+        {
+            try
+            {
+                // Attempt to disconnect the client
+                Plugin.Instance.client.Disconnect();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Handle issues with client initialization or connection state
+                Plugin.Instance.Log($"Operation failed: {ex.Message}", LogType.Error);
+            }
+            catch (Exception ex)
+            {
+                // Catch any unexpected exceptions
+                Plugin.Instance.Log($"Unexpected error: {ex.Message}", LogType.Error);
+            }
+        }
+
         /// <summary>
         /// Processes incoming messages from the server if the client is connecting, connected or disconnecting.
         /// </summary>
@@ -160,7 +209,6 @@ namespace TeamXClient
 
             if (ConnectionStatus != ConnectionStatus.Connecting && ConnectionStatus != ConnectionStatus.Connected && ConnectionStatus != ConnectionStatus.Disconnecting)
             {
-                //Plugin.Instance.Log("Cannot read messages: Client is not connected or (dis)connecting.");
                 return;
             }
 
@@ -236,7 +284,7 @@ namespace TeamXClient
                     }
                     catch (Exception ex)
                     {
-                        Plugin.Instance.Log($"Unexpected error: {ex.Message}", LogType.Error);
+                        Plugin.Instance.Log($"Unexpected error in HandleDataMessage: {ex.Message}", LogType.Error);
                     }
                 }
                 else
@@ -346,12 +394,15 @@ namespace TeamXClient
         /// </summary>
         public void HandleHandshakeRequest()
         {
+            Debug.LogWarning("Got here 1");
             HandshakeResponsePacket handshakeResponse = new HandshakeResponsePacket
             {
                 SteamID = ClientSteamID
             };
+            Debug.LogWarning("Got here 2" + client);
 
             var outgoingMessage = client.CreateMessage();
+            Debug.LogWarning("Got here 3");
             PacketUtility.Pack(handshakeResponse, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
 
@@ -522,51 +573,38 @@ namespace TeamXClient
 
         public void HandleServerRules(ServerRulesResponsePacket serverRules)
         {
-            PermissionSystemPermissions perms = new PermissionSystemPermissions();
-            perms.IsAdministrator = serverRules.IsAdministrator;
-            perms.CanJoin = serverRules.CanJoin;
-            perms.CanCreate = serverRules.CanCreate;
-            perms.CanEdit = serverRules.CanEdit;
-            perms.CanEditAll = serverRules.CanEditAll;
-            perms.CanEditFloor = serverRules.CanEditFloor;
-            perms.CanEditSkybox = serverRules.CanEditSkybox;
-            perms.CanDestroy = serverRules.CanDestroy;
-            perms.BlockLimit = serverRules.BlockLimit;
-            perms.BannedBlocks = serverRules.BannedBlocks;
-
-            Plugin.Instance.Log($"Local permissions:{perms.IsAdministrator},{perms.CanJoin}, {perms.CanCreate}, {perms.CanEdit}, {perms.CanEditAll}, {perms.CanEditFloor}, {perms.CanEditSkybox}, {perms.CanDestroy}, {perms.BlockLimit}, {perms.BannedBlocks.Count}", LogType.Message);
-
-            //Store the server rules.
-            Plugin.Instance.multiplayer.perms = perms;            
-
+            PermissionProfile perms = new PermissionProfile(serverRules);
+            Plugin.Instance.perms.SetLocalProfile(perms);
+            
+            //We are currently in the main menu, requesting permissions before joining the server.
             if (Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
             {
-                if (!perms.CanJoin)
+                //If the player is banned, go back to main menu state and attempt disconnecting.
+                if (Plugin.Instance.perms.IsBanned())
                 {
                     Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
                     Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
 
-                    try
-                    {
-                        // Attempt to disconnect the client
-                        Plugin.Instance.client.Disconnect();
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        // Handle issues with client initialization or connection state
-                        Console.WriteLine($"Operation failed: {ex.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Catch any unexpected exceptions
-                        Console.WriteLine($"Unexpected error: {ex.Message}");
-                    }
+                    AttemptDisconnect();                    
                 }
+                //The player is allowed to join the server, go ahead an load the editor.
                 else
                 {
                     // Transition to the next state and load into the editor
                     Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
                     Plugin.Instance.game.LoadIntoEditorX();
+                }
+            }
+            //We are in a server and received an updated permission package.
+            else if(Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor || Plugin.Instance.game.gameState == GameManager.GameState.TeamXGame)
+            {
+                //Did we just get banned?
+                if (Plugin.Instance.perms.IsBanned())
+                {
+                    //Main menu is the default state for non TeamX players.
+                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
+                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
+                    AttemptDisconnect();
                 }
             }
         }

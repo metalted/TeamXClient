@@ -27,8 +27,6 @@ namespace TeamXClient
         /// </summary>
         public CharacterMode LocalPlayerMode;
 
-        public PermissionSystemPermissions perms;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplayerManager"/> class.
         /// </summary>

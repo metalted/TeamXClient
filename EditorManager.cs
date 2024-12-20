@@ -1,11 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TeamXClient.Extensions;
 using UnityEngine;
 
@@ -211,7 +206,10 @@ namespace TeamXClient
                 Block block = Get(uid);
                 if (block == null) continue;
 
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
+                //Are we allowed to select this?
+                bool isAllowed = (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.perms.CanEditAll());
+
+                if (isAllowed)
                 {
                     Plugin.Instance.client.SendSelection(uid);
                 }
@@ -234,7 +232,10 @@ namespace TeamXClient
                 Block block = Get(uid);
                 if (block == null) continue;
 
-                if (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.multiplayer.perms.CanEditAll)
+                //Are we allowed to select this?
+                bool isAllowed = (block.SteamID == Plugin.Instance.client.ClientSteamID || Plugin.Instance.perms.CanEditAll());
+
+                if (isAllowed)
                 {
                     Plugin.Instance.client.SendDeselection(uid);
                 }
