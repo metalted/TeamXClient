@@ -43,7 +43,7 @@ namespace TeamXClient
             Plugin.Instance.Initialize();
 
             //Create the blue button.
-            Utils.GenerateLevelEditorOnlineButton();
+            InterfaceManager.SetupMainMenuUI();
 
             var client = Plugin.Instance.client;            
 
@@ -84,6 +84,8 @@ namespace TeamXClient
             var editor = Plugin.Instance.editor;
             var multiplayer = Plugin.Instance.multiplayer;
 
+            InterfaceManager.SetupLevelEditorUI(instance);
+
             if (client.ConnectionStatus == ConnectionStatus.Connected)
             {
                 if (gameState == GameState.EnteringTeamXFromMainMenu)
@@ -113,7 +115,7 @@ namespace TeamXClient
                     var globalLevel = central.testMap.GlobalLevel;
                     var manager = central.manager;
 
-                    Utils.DisableLoadButton();
+                    //InterfaceManager.SetupLevelEditorUI(central);
 
                     if (!globalLevel.IsTestLevel)
                     {

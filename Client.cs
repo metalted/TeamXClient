@@ -3,6 +3,7 @@ using Lidgren.Network;
 using TeamXNetwork;
 using TeamXClient.Extensions;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace TeamXClient
 {
@@ -380,6 +381,9 @@ namespace TeamXClient
                     break;
                 case EditorSelectionDeniedPacket editorSelectionDeniedPacket:
                     HandleSelectionDenied(editorSelectionDeniedPacket);
+                    break;
+                case PermissionTableResponse permissionTableResponse:
+                    HandlePermissionTableResponse(permissionTableResponse);
                     break;
 
                 default:
@@ -780,6 +784,15 @@ namespace TeamXClient
             }
         }
 
+        public void HandlePermissionTableResponse(PermissionTableResponse tableResponse)
+        {
+            if(InterfaceManager.permissionPanel != null)
+            {
+                InterfaceManager.permissionPanel.ImportEntries(tableResponse.permissionTable);
+            }
+        }
+
+
         /// <summary>
         /// Sends a block creation request to the server.
         /// </summary>
@@ -925,6 +938,56 @@ namespace TeamXClient
 
             var outgoingMessage = client.CreateMessage();
             PacketUtility.Pack(editorDeselection, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendPermissionTableRequest()
+        {
+            PermissionTableRequest permissionTableRequest = new PermissionTableRequest()
+            {
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(permissionTableRequest, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendPermissionTableSubmit(List<PermissionWindowEntry> entries)
+        {
+            PermissionTableSubmit permissionTableSubmit = new PermissionTableSubmit()
+            {
+                SteamID = ClientSteamID
+            };
+
+            permissionTableSubmit.permissionTable = new List<(ulong, string, string)>();
+            
+            foreach(PermissionWindowEntry e in entries)
+            {
+                string perm = "default";
+
+                if(e.banned)
+                {
+                    perm = "banned";
+                }
+                else if(e.guest)
+                {
+                    perm = "guest";
+                }
+                else if(e.trusted)
+                {
+                    perm = "trusted";
+                }
+                else if(e.admin)
+                {
+                    perm = "admin";
+                }
+
+                permissionTableSubmit.permissionTable.Add((e.steamID, e.user, perm));
+            }
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(permissionTableSubmit, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
     }
