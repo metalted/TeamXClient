@@ -385,6 +385,12 @@ namespace TeamXClient
                 case PermissionTableResponse permissionTableResponse:
                     HandlePermissionTableResponse(permissionTableResponse);
                     break;
+                case SaveConfigurationResponsePacket saveConfigurationResponse:
+                    HandleSaveConfigurationResponse(saveConfigurationResponse);
+                    break;
+                case LevelDirectoryResponsePacket levelDirectoryResponse:
+                    HandleLevelDirectoryResponse(levelDirectoryResponse);
+                    break;
 
                 default:
                     // If no case matches, throw an exception
@@ -398,15 +404,12 @@ namespace TeamXClient
         /// </summary>
         public void HandleHandshakeRequest()
         {
-            Debug.LogWarning("Got here 1");
             HandshakeResponsePacket handshakeResponse = new HandshakeResponsePacket
             {
                 SteamID = ClientSteamID
             };
-            Debug.LogWarning("Got here 2" + client);
 
             var outgoingMessage = client.CreateMessage();
-            Debug.LogWarning("Got here 3");
             PacketUtility.Pack(handshakeResponse, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
 
@@ -572,6 +575,19 @@ namespace TeamXClient
                 client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
 
                 Plugin.Instance.game.gameState = GameManager.GameState.WaitingOnServerRulesInMainMenu;
+            }
+            else if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
+            {
+                //We received a new editor state package while in game, meaning the map has been reloaded from the server.
+                
+                //Deselect everything.
+                Plugin.Instance.editor.Modifier.DeselectAllBlocks();
+
+                //Destroy all blocks
+                Plugin.Instance.editor.Modifier.ClearEditor();
+
+                //Instantiate
+                Plugin.Instance.StartCoroutine(Plugin.Instance.editor.InstantiateFromState());
             }
         }
 
@@ -792,6 +808,22 @@ namespace TeamXClient
             }
         }
 
+        public void HandleSaveConfigurationResponse(SaveConfigurationResponsePacket saveConfigurationResponse)
+        {
+            if (InterfaceManager.saveConfigurationPanel != null)
+            {
+                InterfaceManager.saveConfigurationPanel.UpdateValues(saveConfigurationResponse.AutoSaveInterval, saveConfigurationResponse.BackupCount, saveConfigurationResponse.KeepBackupWithNoEditors, saveConfigurationResponse.LevelName, saveConfigurationResponse.LoadBackupOnStart);
+            }
+        }
+
+        public void HandleLevelDirectoryResponse(LevelDirectoryResponsePacket levelDirectoryResponse)
+        {
+            if (InterfaceManager.levelManagerPanel != null)
+            {
+                InterfaceManager.levelManagerPanel.ImportDirectories(levelDirectoryResponse.LocalPaths);
+            }
+        }
+
 
         /// <summary>
         /// Sends a block creation request to the server.
@@ -988,6 +1020,72 @@ namespace TeamXClient
 
             var outgoingMessage = client.CreateMessage();
             PacketUtility.Pack(permissionTableSubmit, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendSaveCurrentState()
+        {
+            SaveCurrentStatePacket saveCurrentState = new SaveCurrentStatePacket()
+            {
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(saveCurrentState, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendSaveConfigurationRequestPacket()
+        {
+            SaveConfigurationRequestPacket saveConfigurationRequest = new SaveConfigurationRequestPacket()
+            {
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(saveConfigurationRequest, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendSaveConfigurationSubmitPacket(int autosaveInterval, int backupCount, bool keepBackupWithNoEditors, string levelName, bool loadBackupOnStart)
+        {
+            SaveConfigurationSubmitPacket saveConfigurationSubmit = new SaveConfigurationSubmitPacket()
+            {
+                SteamID = ClientSteamID,
+                AutoSaveInterval = autosaveInterval,
+                BackupCount = backupCount,
+                KeepBackupWithNoEditors = keepBackupWithNoEditors,
+                LevelName = levelName,
+                LoadBackupOnStart = loadBackupOnStart
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(saveConfigurationSubmit, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendLoadLevelRequestPacket(string localPath)
+        {
+            LoadLevelRequestPacket loadLevelRequest = new LoadLevelRequestPacket()
+            {
+                SteamID = ClientSteamID,
+                LocalPath = localPath
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(loadLevelRequest, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        public void SendLevelDirectoryRequestPacket()
+        {
+            LevelDirectoryRequestPacket levelDirectoryRequest = new LevelDirectoryRequestPacket()
+            {
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(levelDirectoryRequest, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
     }

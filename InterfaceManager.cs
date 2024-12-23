@@ -15,6 +15,8 @@ namespace TeamXClient
     public static class InterfaceManager
     {
         public static TeamXPermissionPanel permissionPanel;
+        public static TeamXSaveConfigurationPanel saveConfigurationPanel;
+        public static TeamXLevelManagerPanel levelManagerPanel;
 
         public static Color lightestGreen = new Color(0.336f, 1f, 0.766f); //86.196.255
         public static Color lightGreen = new Color(0f, 1f, 0.656f, 1f); //0.168.255
@@ -124,6 +126,18 @@ namespace TeamXClient
             GameObject.Destroy(permissionPanelCopy.GetComponent<LEV_SaveLoad>());
             permissionPanel = permissionPanelCopy.gameObject.AddComponent<TeamXPermissionPanel>();
             permissionPanel.Initialize(central);
+
+            Transform saveConfigurationPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
+            permissionPanelCopy.name = "TeamXSaveConfigurationPanel";
+            GameObject.Destroy(saveConfigurationPanelCopy.GetComponent<LEV_SaveLoad>());
+            saveConfigurationPanel = saveConfigurationPanelCopy.gameObject.AddComponent<TeamXSaveConfigurationPanel>();
+            saveConfigurationPanel.Initialize(central);
+
+            Transform levelManagerPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
+            levelManagerPanelCopy.name = "TeamXLevelManagerPanel";
+            GameObject.Destroy(levelManagerPanelCopy.GetComponent<LEV_SaveLoad>());
+            levelManagerPanel = levelManagerPanelCopy.gameObject.AddComponent<TeamXLevelManagerPanel>();
+            levelManagerPanel.Initialize(central);
         }
 
         public static void UnbindButton(LEV_CustomButton button)

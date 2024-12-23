@@ -115,6 +115,27 @@ namespace TeamXClient
             }
         }
 
+        public void ClearEditor()
+        {
+            foreach(BlockProperties blockProperties in editor.Central.undoRedo.allBlocksDictionary.Values)
+            {
+                if(blockProperties != null)
+                {
+                    //Make sure its deselected
+                    bool isSelected = editor.Central.selection.list.Any(block => block.UID == blockProperties.UID);
+                    if (isSelected)
+                    {
+                        DeselectBlock(blockProperties.UID);
+                    }
+
+                    GameObject.Destroy(blockProperties.gameObject);                   
+                }
+            }
+
+            editor.Central.undoRedo.allBlocksDictionary.Clear();
+            editor.Central.validation.RecalcBlocksAndDraw(false);
+        }
+
         /// <summary>
         /// Updates the editor's floor with the specified material ID.
         /// </summary>
