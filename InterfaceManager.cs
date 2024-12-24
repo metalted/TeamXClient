@@ -128,7 +128,7 @@ namespace TeamXClient
             permissionPanel.Initialize(central);
 
             Transform saveConfigurationPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
-            permissionPanelCopy.name = "TeamXSaveConfigurationPanel";
+            saveConfigurationPanelCopy.name = "TeamXSaveConfigurationPanel";
             GameObject.Destroy(saveConfigurationPanelCopy.GetComponent<LEV_SaveLoad>());
             saveConfigurationPanel = saveConfigurationPanelCopy.gameObject.AddComponent<TeamXSaveConfigurationPanel>();
             saveConfigurationPanel.Initialize(central);

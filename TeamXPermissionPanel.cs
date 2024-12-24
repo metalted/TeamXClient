@@ -93,13 +93,15 @@ namespace TeamXClient
             ColorCurrentState();
         }
     }
-
-
+    
     public class TeamXPermissionPanel : TeamXPanel
     {     
+        //Holds the rows of 'checkbox' buttons for each player.
         public List<PermissionWindowEntry> windowEntries = new List<PermissionWindowEntry>();
+        //A prefab for constructing a checkbox button.
         public RectTransform buttonPrefabRect;
 
+        //Zeepkist panel components.
         public Dictionary<TeamXPanelComponentName, TeamXPanelComponent> panelComponents;
         public TeamXPanelState currentState = TeamXPanelState.Closed;
 
@@ -179,14 +181,19 @@ namespace TeamXClient
 
             //Create the reload button
             panelComponents[TeamXPanelComponentName.Reload].SetButtonText("Reload");
-            panelComponents[TeamXPanelComponentName.Reload].SetRectAnchors(0.025f, 0.75f, 0.225f, 0.85f);
+            panelComponents[TeamXPanelComponentName.Reload].SetRectAnchors(0.68f, 0.88f, 0.89f, 0.975f);
             panelComponents[TeamXPanelComponentName.Reload].BindButton(() => OnReloadButton());
 
             //Create the apply button
+            panelComponents[TeamXPanelComponentName.Save].SetRectAnchors(0.825f, 0.025f, 0.975f, 0.125f);
             panelComponents[TeamXPanelComponentName.Save].BindButton(() => OnApplyButton());
 
             //Create the close button
             panelComponents[TeamXPanelComponentName.Exit].BindButton(() => OnCloseButton());
+
+            //Resize the scroll view
+            panelComponents[TeamXPanelComponentName.ScrollView].SetRectAnchors(0.025f, 0.15f, 0.975f, 0.85f);
+            panelComponents[TeamXPanelComponentName.ScrollView].SetGridLayoutColumns(6, 0.25f);
 
             //Hide everything else
             panelComponents[TeamXPanelComponentName.Home].Disable();
@@ -199,96 +206,7 @@ namespace TeamXClient
             panelComponents[TeamXPanelComponentName.FileName].Disable();
 
             buttonPrefabRect = GameObject.Instantiate(panelComponents[TeamXPanelComponentName.Home].Rect.gameObject, panelComponents[TeamXPanelComponentName.Home].Rect.transform.parent).GetComponent<RectTransform>();
-            buttonPrefabRect.gameObject.SetActive(false);
-
-            panelComponents[TeamXPanelComponentName.ScrollView].SetGridLayoutColumns(6, 0.25f);
-
-            //Create a copy of the save button for the load button
-            //RectTransform loadRect = GameObject.Instantiate(panelComponents[TeamXPanelComponentName.Save].Rect.gameObject, panelComponents[TeamXPanelComponentName.Save].Rect.transform.parent).GetComponent<RectTransform>();
-            //panelComponents.Add(TeamXPanelComponentName.Load, new TeamXPanelComponent(TeamXPanelComponentType.Button, TeamXPanelComponentName.Load, loadRect));
-
-            //Create a copy of the load preview for the save preview
-            //RectTransform savePreviewRect = GameObject.Instantiate(panelComponents[TeamXPanelComponentName.LoadPreview].Rect.gameObject, panelComponents[TeamXPanelComponentName.LoadPreview].Rect.transform.parent).GetComponent<RectTransform>();
-            //panelComponents.Add(TeamXPanelComponentName.SavePreview, new TeamXPanelComponent(TeamXPanelComponentType.Button, TeamXPanelComponentName.SavePreview, savePreviewRect));
-
-            //Create a copy of the save button so we can create the two smaller load buttons
-            //RectTransform loadHereRect = GameObject.Instantiate(panelComponents[TeamXPanelComponentName.Save].Rect.gameObject, panelComponents[TeamXPanelComponentName.Save].Rect.transform.parent).GetComponent<RectTransform>();
-            //panelComponents.Add(TeamXPanelComponentName.LoadHere, new TeamXPanelComponent(TeamXPanelComponentType.Button, TeamXPanelComponentName.LoadHere, loadHereRect));
-            //RectTransform loadFileRect = TeamXUIManagement.SplitLEVCustomButton(panelComponents[TeamXPanelComponentName.LoadHere].Button, 0.05f).GetComponent<RectTransform>();
-            //panelComponents.Add(TeamXPanelComponentName.LoadFile, new TeamXPanelComponent(TeamXPanelComponentType.Button, TeamXPanelComponentName.LoadFile, loadFileRect));
-
-            //Create a copy of the filename to use for the searchbar
-            //RectTransform searchBarRect = GameObject.Instantiate(panelComponents[TeamXPanelComponentName.FileName].Rect.gameObject, panelComponents[TeamXPanelComponentName.FileName].Rect.transform.parent).GetComponent<RectTransform>();
-            //panelComponents.Add(TeamXPanelComponentName.SearchBar, new TeamXPanelComponent(TeamXPanelComponentType.TextInput, TeamXPanelComponentName.SearchBar, searchBarRect));
-
-            //Create a copy of the folder panel for the upload panel
-            //RectTransform uploadPanelRect = GameObject.Instantiate(folderPanel.Rect.gameObject, folderPanel.Rect.transform.parent).GetComponent<RectTransform>();
-            //uploadPanel = new TeamXUploadPanel(this, uploadPanelRect);
-
-            //Create a copy of the are you sure panel and use it for the upload panel
-            //RectTransform uploadPanelConfirmPanel = GameObject.Instantiate(confirmPanel.Rect, confirmPanel.Rect.transform.parent).GetComponent<RectTransform>();
-            //uploadPanel.InitializeConfirmPanel(uploadPanelConfirmPanel);
-
-            //Reposition components
-            /*panelComponents[TeamXPanelComponentName.TypeText].SetRectAnchors(0.03f, 0.8f, 0.23f, 0.85f);
-            panelComponents[TeamXPanelComponentName.Home].SetRectAnchors(0.03f, 0.71f, 0.07f, 0.79f);
-            panelComponents[TeamXPanelComponentName.UpOneLevel].SetRectAnchors(0.08f, 0.71f, 0.12f, 0.79f);
-            panelComponents[TeamXPanelComponentName.NewFolder].SetRectAnchors(0.13f, 0.71f, 0.17f, 0.79f);
-            panelComponents[TeamXPanelComponentName.SwitchDir].SetRectAnchors(0.18f, 0.71f, 0.23f, 0.79f);
-            panelComponents[TeamXPanelComponentName.SearchBar].SetRectAnchors(0.03f, 0.63f, 0.23f, 0.7f);
-            panelComponents[TeamXPanelComponentName.LoadPreview].SetRectAnchors(0.03f, 0.25f, 0.23f, 0.62f);
-            panelComponents[TeamXPanelComponentName.SavePreview].SetRectAnchors(0.03f, 0.25f, 0.23f, 0.62f);
-            panelComponents[TeamXPanelComponentName.Upload].SetRectAnchors(0.735f, 0.88f, 0.79f, 0.975f);*/
-
-            //Bind functions to the buttons.
-            /*panelComponents[TeamXPanelComponentName.Save].BindButton(() => OnSaveButton());
-            panelComponents[TeamXPanelComponentName.Load].BindButton(() => OnLoadButton(true));
-            panelComponents[TeamXPanelComponentName.LoadHere].BindButton(() => OnLoadButton(true));
-            panelComponents[TeamXPanelComponentName.LoadFile].BindButton(() => OnLoadButton(false));
-            panelComponents[TeamXPanelComponentName.Home].BindButton(() => GoHome());
-            panelComponents[TeamXPanelComponentName.UpOneLevel].BindButton(() => OnUpOneLevelButton());
-            panelComponents[TeamXPanelComponentName.NewFolder].BindButton(() => OnNewFolderButton());
-            panelComponents[TeamXPanelComponentName.SwitchDir].BindButton(() => OnSwitchDirButton());
-            panelComponents[TeamXPanelComponentName.LoadPreview].BindButton(() => OnLoadPreviewButton());
-            panelComponents[TeamXPanelComponentName.SavePreview].BindButton(() => OnSavePreviewButton());
-            panelComponents[TeamXPanelComponentName.OpenFolder].BindButton(() => OnOpenFolderButton());
-            panelComponents[TeamXPanelComponentName.Exit].BindButton(() => Close());
-            panelComponents[TeamXPanelComponentName.Upload].BindButton(() => OnUploadButton());
-            panelComponents[TeamXPanelComponentName.SearchBar].textInputField.onValueChanged.AddListener(delegate { RefreshPanel(); });*/
-
-            //Change button image sizes
-            /*panelComponents[TeamXPanelComponentName.Home].SetButtonImageRectAnchors(0.1f, 0.1f, 0.9f, 0.9f);
-            panelComponents[TeamXPanelComponentName.NewFolder].SetButtonImageRectAnchors(0.1f, 0.1f, 0.9f, 0.9f);
-            panelComponents[TeamXPanelComponentName.SwitchDir].SetButtonImageRectAnchors(0.1f, 0.1f, 0.9f, 0.9f);
-            panelComponents[TeamXPanelComponentName.LoadPreview].SetButtonImageRectAnchors(0.0f, 0.0f, 1f, 1f);
-            panelComponents[TeamXPanelComponentName.SavePreview].SetButtonImageRectAnchors(0.0f, 0.0f, 1f, 1f);*/
-
-            //Set sprites
-            /*panelComponents[TeamXPanelComponentName.LoadHere].SetButtonImage(TeamXSprites.markerSprite);
-            panelComponents[TeamXPanelComponentName.LoadFile].SetButtonImage(TeamXSprites.fileSprite);
-            panelComponents[TeamXPanelComponentName.SwitchDir].SetButtonImage(TeamXSprites.fileSwitchSprite);
-            panelComponents[TeamXPanelComponentName.LoadPreview].SetButtonImage(TeamXSprites.blackPixelSprite);
-            panelComponents[TeamXPanelComponentName.SavePreview].SetButtonImage(TeamXSprites.blackPixelSprite);
-            panelComponents[TeamXPanelComponentName.Save].SetButtonImage(TeamXManager.central.saveload.saveImage);
-            panelComponents[TeamXPanelComponentName.Load].SetButtonImage(TeamXManager.central.saveload.loadImage);
-            panelComponents[TeamXPanelComponentName.Upload].SetButtonImage(TeamXSprites.uploadImageSprite);*/
-
-            //Turn preview button completely black
-            //RecolorButton(panelComponents[TeamXPanelComponentName.LoadPreview].Button, Color.black, Color.black, Color.black, true);
-            //RecolorButton(panelComponents[TeamXPanelComponentName.SavePreview].Button, Color.black, Color.black, Color.black, true);
-
-            //Remove texts from buttons
-            /*panelComponents[TeamXPanelComponentName.Home].HideButtonText();
-            panelComponents[TeamXPanelComponentName.NewFolder].HideButtonText();
-            panelComponents[TeamXPanelComponentName.SwitchDir].HideButtonText();
-            panelComponents[TeamXPanelComponentName.LoadPreview].HideButtonText();
-            panelComponents[TeamXPanelComponentName.SavePreview].HideButtonText();*/
-
-            //Set some values 
-            /*panelComponents[TeamXPanelComponentName.URL].SetText("path/to/some/file");
-            panelComponents[TeamXPanelComponentName.FileName].SetPlaceHolderText("...");
-            panelComponents[TeamXPanelComponentName.SearchBar].SetPlaceHolderText("Search...");
-            panelComponents[TeamXPanelComponentName.TypeText].SetText("Blueprints");*/
+            buttonPrefabRect.gameObject.SetActive(false);            
         }
 
         private void OnCloseButton() 
@@ -298,17 +216,13 @@ namespace TeamXClient
 
         private void Close()
         {
-            Debug.Log("Close");
             gameObject.SetActive(false);
             currentState = TeamXPanelState.Closed;
         }
 
         private void OnReloadButton() 
         {
-            Debug.Log("Reload");
-
             EmptyWindowEntries();
-
             Plugin.Instance.client.SendPermissionTableRequest();
         }    
 
@@ -434,11 +348,8 @@ namespace TeamXClient
         }
 
         private void OnApplyButton()
-        {
-            Debug.Log("Apply");
-
+        { 
             Plugin.Instance.client.SendPermissionTableSubmit(windowEntries);
-
             Close();
         }
     }
