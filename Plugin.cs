@@ -5,29 +5,6 @@ using System;
 using UnityEngine;
 using TeamXNetwork;
 
-/* Overview of scripts and to do's 
- * Plugin.cs                Done 
- * Block.cs                 Done
- * Client.cs                Done
- * EditorManager.cs         Done
- * EditorModifier.cs        Done
- * EditorObserver.cs        Done
- * GameManager.cs           Done
- * MultiplayerManager.cs    Done
- * PlayerObserver.cs        Done
- * SelectionObserver.cs     Done
- * Shpleeble.cs             Done
- * Utils.cs                 Done
- * 
- * We need to create an openable ui, in which we can set permissions for players
- * This needs to be a window similar to blueprintsX. We create a scrollable list that shows all the players.
- * It would be nice if we could somehow create checkboxes for each permission level, so you can simple select one of them for each player.
- * Then after we set the permissions we click the apply button.
- * 
- * We also need to be able to reload a save somehow. Like request a list of save names, select one and load it. Or maybe even make saves with names.
- * 
- */
-
 namespace TeamXClient
 {
     [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
@@ -36,7 +13,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.0";
+        public const string pluginVersion = "1.1";
 
         public static Plugin Instance;
         
