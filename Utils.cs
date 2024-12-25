@@ -280,6 +280,46 @@ namespace TeamXClient
             shpleeble.gameObject.SetActive(false);
 
             shpleeblePrefab = shpleeble;
-        }        
+        }
+
+        public static Transform CreatePanel(LEV_LevelEditorCentral central, string title)
+        {
+            if (central == null)
+            {
+                return null;
+            }
+
+            Transform panelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
+            panelCopy.gameObject.name = title;
+            GameObject.Destroy(panelCopy.GetComponent<LEV_SaveLoad>());
+            return panelCopy;
+        }
+
+        public static Dictionary<string, List<string>> GroupTeamKistFilesByProject(IEnumerable<string> paths)
+        {
+            var projectFiles = new Dictionary<string, List<string>>();
+
+            foreach (var path in paths)
+            {
+                Debug.Log(path);
+
+                // Split the path to extract the project name and file name
+                string[] parts = path.Split('\\');
+                if (parts.Length >= 3) // Ensure path has enough components
+                {
+                    string projectName = parts[0];
+                    string fileName = parts[parts.Length - 1]; // Get the last part (file name)
+
+                    // Add to the dictionary
+                    if (!projectFiles.ContainsKey(projectName))
+                    {
+                        projectFiles[projectName] = new List<string>();
+                    }
+                    projectFiles[projectName].Add(fileName);
+                }
+            }
+
+            return projectFiles;
+        }
     }
 }

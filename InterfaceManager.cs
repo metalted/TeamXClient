@@ -14,9 +14,15 @@ namespace TeamXClient
    
     public static class InterfaceManager
     {
+        public static TeamXPanelComponent permissionButton;
+        public static TeamXPanelComponent saveConfigurationButton;
+        public static TeamXPanelComponent levelManagerButton;
+
         public static TeamXPermissionPanel permissionPanel;
         public static TeamXSaveConfigurationPanel saveConfigurationPanel;
         public static TeamXLevelManagerPanel levelManagerPanel;
+
+        public static LEV_LevelEditorCentral _central;
 
         public static Color lightestGreen = new Color(0.336f, 1f, 0.766f); //86.196.255
         public static Color lightGreen = new Color(0f, 1f, 0.656f, 1f); //0.168.255
@@ -31,15 +37,73 @@ namespace TeamXClient
             GenerateLevelEditorOnlineButton();
         }
 
-        public static void SetupLevelEditorUI(LEV_LevelEditorCentral central)
+        public static void SetupLevelEditorUI(LEV_LevelEditorCentral central, bool management = false)
         {
-            //DisableLoadButton();
-            InitializePanels(central);
+            _central = central;
+            DisableLoadButton();
+
+            if (management)
+            {
+                InitializePanels(central);
+                CreateToolbarButtons(central);
+            }
         }
 
-        public static void UpdatePermissionPanel()
+        public static void OnPanelOpen()
         {
+            _central.tool.DisableAllTools();
+            _central.tool.RecolorButtons();
+            _central.tool.currentTool = 3;
+            _central.tool.inspectorTitle.text = "";
+        }
 
+        public static void OnPanelClose()
+        {
+            _central.tool.EnableEditTool();
+            _central.tool.RecolorButtons();
+            _central.cam.OverrideOutsideGameView(false);
+        }
+
+        private static void CreateToolbarButtons(LEV_LevelEditorCentral central)
+        {
+            RectTransform permissionRect= GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            permissionButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, permissionRect);
+            permissionButton.SetRectAnchors(0, 0.67f, 0.02f, 1f);
+            permissionButton.BindButton(() =>
+            {
+                central.selection.DeselectAllBlocks(false, "");
+
+                if(permissionPanel != null)
+                {
+                    permissionPanel.Open();                
+                }
+            });
+
+            RectTransform saveConfigurationRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            saveConfigurationButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, saveConfigurationRect);
+            saveConfigurationButton.SetRectAnchors(0, 0.34f, 0.02f, 0.65f);
+            saveConfigurationButton.BindButton(() =>
+            {
+                central.selection.DeselectAllBlocks(false, "");
+
+                if (saveConfigurationPanel != null)
+                {
+                    saveConfigurationPanel.Open();
+                }
+            });
+
+            RectTransform levelManagerRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            levelManagerButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, levelManagerRect);
+            levelManagerButton.SetRectAnchors(0, 0, 0.02f, 0.32f);
+            levelManagerButton.BindButton(() =>
+            {
+                central.selection.DeselectAllBlocks(false, "");
+
+                if (levelManagerPanel != null)
+                {
+                    levelManagerPanel.Open();
+                }
+            });
         }
 
         //This function will split the regular level editor button in to two buttons, one for regular and one for teamkist.
@@ -121,23 +185,14 @@ namespace TeamXClient
 
         private static void InitializePanels(LEV_LevelEditorCentral central)
         {
-            Transform permissionPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
-            permissionPanelCopy.name = "TeamXPermissionPanel";
-            GameObject.Destroy(permissionPanelCopy.GetComponent<LEV_SaveLoad>());
-            permissionPanel = permissionPanelCopy.gameObject.AddComponent<TeamXPermissionPanel>();
-            permissionPanel.Initialize(central);
+            permissionPanel = Utils.CreatePanel(central, "TeamX Permissions").gameObject.AddComponent<TeamXPermissionPanel>();
+            permissionPanel.Initialize();
 
-            Transform saveConfigurationPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
-            saveConfigurationPanelCopy.name = "TeamXSaveConfigurationPanel";
-            GameObject.Destroy(saveConfigurationPanelCopy.GetComponent<LEV_SaveLoad>());
-            saveConfigurationPanel = saveConfigurationPanelCopy.gameObject.AddComponent<TeamXSaveConfigurationPanel>();
-            saveConfigurationPanel.Initialize(central);
+            saveConfigurationPanel = Utils.CreatePanel(central, "TeamX Save Configuration").gameObject.AddComponent<TeamXSaveConfigurationPanel>();
+            saveConfigurationPanel.Initialize();
 
-            Transform levelManagerPanelCopy = GameObject.Instantiate<Transform>(central.saveload.transform, central.saveload.transform.parent);
-            levelManagerPanelCopy.name = "TeamXLevelManagerPanel";
-            GameObject.Destroy(levelManagerPanelCopy.GetComponent<LEV_SaveLoad>());
-            levelManagerPanel = levelManagerPanelCopy.gameObject.AddComponent<TeamXLevelManagerPanel>();
-            levelManagerPanel.Initialize(central);
+            levelManagerPanel = Utils.CreatePanel(central, "TeamX Level Manager").gameObject.AddComponent<TeamXLevelManagerPanel>();
+            levelManagerPanel.Initialize();
         }
 
         public static void UnbindButton(LEV_CustomButton button)

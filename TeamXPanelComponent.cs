@@ -14,7 +14,6 @@ namespace TeamXClient
     public class TeamXPanelComponent
     {
         public TeamXPanelComponentType ComponentType;
-        public TeamXPanelComponentName ComponentName;
         public LEV_CustomButton Button;
         public Image Image;
         public Image textInputBackground;
@@ -26,12 +25,15 @@ namespace TeamXClient
         public ContentSizeFitter contentSizeFitter;
         public GridLayoutGroup gridLayoutGroup;
 
-        public TeamXPanelComponent(TeamXPanelComponentType componentType, TeamXPanelComponentName componentName, RectTransform rect)
+        public void SetGameObjectName(string name)
+        {
+            this.Rect.gameObject.name = name;
+        }
+
+        public TeamXPanelComponent(TeamXPanelComponentType componentType, RectTransform rect)
         {
             this.ComponentType = componentType;
-            this.ComponentName = componentName;
-            this.Rect = rect;
-            this.Rect.gameObject.name = componentName.ToString();
+            this.Rect = rect;            
 
             switch (ComponentType)
             {
@@ -176,6 +178,20 @@ namespace TeamXClient
                 RectTransform imageChild = Rect.GetChild(0).GetComponent<RectTransform>();
                 imageChild.anchorMin = new Vector2(anchorMinX, anchorMinY);
                 imageChild.anchorMax = new Vector2(anchorMaxX, anchorMaxY);
+            }
+        }
+
+        public void SetButtonTextRectAnchors(float anchorMinX, float anchorMinY, float anchorMaxX, float anchorMaxY)
+        {
+            if (ComponentType == TeamXPanelComponentType.Button)
+            {
+                Transform c1 = Rect.GetChild(1);
+                if(c1 != null)
+                {
+                    RectTransform imageChild = c1.GetComponent<RectTransform>();
+                    imageChild.anchorMin = new Vector2(anchorMinX, anchorMinY);
+                    imageChild.anchorMax = new Vector2(anchorMaxX, anchorMaxY);
+                }                
             }
         }
 

@@ -985,7 +985,7 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
-        public void SendPermissionTableSubmit(List<PermissionWindowEntry> entries)
+        public void SendPermissionTableSubmit(List<TeamXPermissionPanelEntry> entries)
         {
             PermissionTableSubmit permissionTableSubmit = new PermissionTableSubmit()
             {
@@ -994,7 +994,7 @@ namespace TeamXClient
 
             permissionTableSubmit.permissionTable = new List<(ulong, string, string)>();
             
-            foreach(PermissionWindowEntry e in entries)
+            foreach(TeamXPermissionPanelEntry e in entries)
             {
                 string perm = "default";
 

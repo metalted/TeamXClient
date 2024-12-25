@@ -82,9 +82,7 @@ namespace TeamXClient
         {
             var client = Plugin.Instance.client;
             var editor = Plugin.Instance.editor;
-            var multiplayer = Plugin.Instance.multiplayer;
-
-            InterfaceManager.SetupLevelEditorUI(instance);
+            var multiplayer = Plugin.Instance.multiplayer;            
 
             if (client.ConnectionStatus == ConnectionStatus.Connected)
             {
@@ -115,7 +113,7 @@ namespace TeamXClient
                     var globalLevel = central.testMap.GlobalLevel;
                     var manager = central.manager;
 
-                    //InterfaceManager.SetupLevelEditorUI(central);
+                    InterfaceManager.SetupLevelEditorUI(central, Plugin.Instance.perms.IsAdmin());
 
                     if (!globalLevel.IsTestLevel)
                     {

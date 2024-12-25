@@ -111,5 +111,10 @@ namespace TeamXClient
         {
             return LocalProfile.BannedBlocks;
         }
+
+        public bool IsAdmin()
+        {
+            return LocalProfile.IsAdministrator;
+        }
     }
 }
