@@ -31,11 +31,16 @@ namespace TeamXClient
 
         }
 
-        public virtual void Open()
+        public virtual void Open(bool notifyManager = true)
         {
             currentState = TeamXPanelState.Open;
             gameObject.SetActive(true);
-            InterfaceManager.OnPanelOpen();
+
+            if(notifyManager)
+            {
+                InterfaceManager.OnPanelOpen();
+            }
+            
             OnOpen();
         }
 
@@ -97,6 +102,7 @@ namespace TeamXClient
                         break;
                     case "URL":
                         panelComponents.Add(TeamXPanelComponentName.URL, new TeamXPanelComponent(TeamXPanelComponentType.Text, rt));
+                        panelComponents[TeamXPanelComponentName.URL].SetRectAnchors(0.06f, 0.88f, 0.5f, 0.95f);
                         break;
                     case "Scroll View":
                         panelComponents.Add(TeamXPanelComponentName.ScrollView, new TeamXPanelComponent(TeamXPanelComponentType.ScrollView, rt));
@@ -122,9 +128,20 @@ namespace TeamXClient
 
         protected virtual void OnCloseButton()
         {
-
+            Close();
         }
-   
+
+        public virtual void Close(bool notifyManager = true)
+        {
+            gameObject.SetActive(false);
+            currentState = TeamXPanelState.Closed;
+
+            if (notifyManager)
+            {
+                InterfaceManager.OnPanelClose();
+            }
+        }
+
         protected void SetBackgroundColor(Color color)
         {
             panelComponents[TeamXPanelComponentName.Background].Image.color = color;

@@ -81,7 +81,7 @@ namespace TeamXClient
             SetBackgroundColor(InterfaceManager.darkGreen);
             SetTitle(title);
 
-            CreateImageTextButton("Reload", "Refresh", "Reload");
+            CreateTextButton("Reload", "Reload");
             elements["Reload"].SetRectAnchors(0.68f, 0.88f, 0.89f, 0.975f);
             elements["Reload"].BindButton(() => OnReloadButton());
 
@@ -89,17 +89,25 @@ namespace TeamXClient
             elements["ScrollView"].SetRectAnchors(0.025f, 0.15f, 0.975f, 0.85f);
             elements["ScrollView"].SetGridLayoutColumns(2, 0.1f);
 
-            CreateImageButton("Apply", "Save");
+            CreateTextButton("Apply", "Send to Server");
             elements["Apply"].SetRectAnchors(0.825f, 0.025f, 0.975f, 0.125f);
             elements["Apply"].BindButton(() => OnApplyButton());
 
             CreateLabel("Selected", "");
             elements["Selected"].SetRectAnchors(0.025f, 0.025f, 0.5f, 0.125f);
 
-            CreateImageButton("BackButton", "Arrow");
+            CreateTextButton("BackButton", "< Levels");
             elements["BackButton"].SetRectAnchors(0.5f, 0.88f, 0.6f, 0.975f);
             elements["BackButton"].BindButton(() => OnBackButton());
             elements["BackButton"].Disable();
+
+            CreateTextButton("BackToMain", "<<");
+            elements["BackToMain"].SetRectAnchors(0.025f, 0.88f, 0.05f, 0.975f);
+            elements["BackToMain"].BindButton(() =>
+            {
+                InterfaceManager.mainPanel.Open(false);
+                Close(false);
+            });
         }
 
         private void OnBackButton()
@@ -125,18 +133,6 @@ namespace TeamXClient
             }
 
             Plugin.Instance.client.SendLoadLevelRequestPacket(selectedLevelPath);
-            Close();
-        }
-
-        private void Close()
-        {
-            gameObject.SetActive(false);
-            currentState = TeamXPanelState.Closed;
-            InterfaceManager.OnPanelClose();
-        }
-
-        protected override void OnCloseButton()
-        {
             Close();
         }
     }

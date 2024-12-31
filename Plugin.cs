@@ -5,6 +5,12 @@ using System;
 using UnityEngine;
 using TeamXNetwork;
 
+//TODO
+//Add a way to download the level to your local machine, when you are admin.
+//Add a way to save the current level.
+//Add a chat interface and the messaging required.
+//Add a way to assign regions to players.
+
 namespace TeamXClient
 {
     [BepInPlugin(pluginGUID, pluginName, pluginVersion)]
@@ -13,7 +19,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.1";
+        public const string pluginVersion = "1.1.1";
 
         public static Plugin Instance;
         

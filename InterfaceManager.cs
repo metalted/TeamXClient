@@ -14,10 +14,9 @@ namespace TeamXClient
    
     public static class InterfaceManager
     {
-        public static TeamXPanelComponent permissionButton;
-        public static TeamXPanelComponent saveConfigurationButton;
-        public static TeamXPanelComponent levelManagerButton;
+        public static TeamXPanelComponent teamXToolbarButton;
 
+        public static TeamXMainPanel mainPanel;
         public static TeamXPermissionPanel permissionPanel;
         public static TeamXSaveConfigurationPanel saveConfigurationPanel;
         public static TeamXLevelManagerPanel levelManagerPanel;
@@ -66,44 +65,18 @@ namespace TeamXClient
 
         private static void CreateToolbarButtons(LEV_LevelEditorCentral central)
         {
-            RectTransform permissionRect= GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
-            permissionButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, permissionRect);
-            permissionButton.SetRectAnchors(0, 0.67f, 0.02f, 1f);
-            permissionButton.BindButton(() =>
+            RectTransform teamXToolbarRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            teamXToolbarButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, teamXToolbarRect);
+            teamXToolbarButton.SetRectAnchors(0.005f, 0.1f, 0.025f, 0.9f);
+            teamXToolbarButton.BindButton(() =>
             {
                 central.selection.DeselectAllBlocks(false, "");
 
-                if(permissionPanel != null)
+                if (mainPanel != null)
                 {
-                    permissionPanel.Open();                
+                    mainPanel.Open();
                 }
-            });
-
-            RectTransform saveConfigurationRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
-            saveConfigurationButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, saveConfigurationRect);
-            saveConfigurationButton.SetRectAnchors(0, 0.34f, 0.02f, 0.65f);
-            saveConfigurationButton.BindButton(() =>
-            {
-                central.selection.DeselectAllBlocks(false, "");
-
-                if (saveConfigurationPanel != null)
-                {
-                    saveConfigurationPanel.Open();
-                }
-            });
-
-            RectTransform levelManagerRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
-            levelManagerButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, levelManagerRect);
-            levelManagerButton.SetRectAnchors(0, 0, 0.02f, 0.32f);
-            levelManagerButton.BindButton(() =>
-            {
-                central.selection.DeselectAllBlocks(false, "");
-
-                if (levelManagerPanel != null)
-                {
-                    levelManagerPanel.Open();
-                }
-            });
+            });           
         }
 
         //This function will split the regular level editor button in to two buttons, one for regular and one for teamkist.
@@ -185,6 +158,9 @@ namespace TeamXClient
 
         private static void InitializePanels(LEV_LevelEditorCentral central)
         {
+            mainPanel = Utils.CreatePanel(central, "TeamX").gameObject.AddComponent<TeamXMainPanel>();
+            mainPanel.Initialize();
+
             permissionPanel = Utils.CreatePanel(central, "TeamX Permissions").gameObject.AddComponent<TeamXPermissionPanel>();
             permissionPanel.Initialize();
 

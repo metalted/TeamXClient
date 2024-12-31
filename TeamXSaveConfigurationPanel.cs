@@ -20,11 +20,19 @@ namespace TeamXClient
             SetBackgroundColor(InterfaceManager.darkGreen);
             SetTitle(title);
 
-            CreateImageTextButton("Reload", "Refresh", "Reload");
+            CreateTextButton("BackToMain", "<<");
+            elements["BackToMain"].SetRectAnchors(0.025f, 0.88f, 0.05f, 0.975f);
+            elements["BackToMain"].BindButton(() =>
+            {
+                InterfaceManager.mainPanel.Open(false);
+                Close(false);
+            });
+
+            CreateTextButton("Reload", "Reload");
             elements["Reload"].SetRectAnchors(0.68f, 0.88f, 0.89f, 0.975f);
             elements["Reload"].BindButton(() => OnReloadButton());
 
-            CreateImageButton("Apply", "Save");
+            CreateTextButton("Apply", "Send to Server");
             elements["Apply"].SetRectAnchors(0.825f, 0.025f, 0.975f, 0.125f);
             elements["Apply"].BindButton(() => OnApplyButton());
 
@@ -87,18 +95,6 @@ namespace TeamXClient
             
             elements["LoadBackupStartButton"].SetButtonText(LoadBackupOnStart ? "Yes" : "No");
             InterfaceManager.RecolorButton(elements["LoadBackupStartButton"].Button, LoadBackupOnStart ? Color.green : Color.red, Color.black, Color.black, true);
-        }
-
-        protected override void OnCloseButton()
-        {
-            Close();
-        }
-
-        private void Close()
-        {
-            gameObject.SetActive(false);
-            currentState = TeamXPanelState.Closed;
-            InterfaceManager.OnPanelClose();
         }
 
         private void OnReloadButton()
