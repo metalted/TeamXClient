@@ -19,7 +19,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.1.1";
+        public const string pluginVersion = "1.1.2";
 
         public static Plugin Instance;
         
@@ -58,6 +58,26 @@ namespace TeamXClient
 
             cfg_serverIP = Config.Bind("Settings", "Server IP", "127.0.0.1", "The IP address of the TeamX server");
             cfg_serverPort = Config.Bind("Settings", "Server Port", 8080, "The Port of the TeamX server.");
+        }
+
+        public int GetBlockAllowance()
+        {
+            if(game.gameState == GameManager.GameState.TeamXEditor)
+            {
+                int blockAllowance = perms.GetBlockLimit() - editor.GetBlockCountBy(client.ClientSteamID);
+                blockAllowance = Mathf.Max(blockAllowance, 0);
+                return blockAllowance;
+                
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        public bool IsTeamXEditor()
+        {
+            return game.gameState == GameManager.GameState.TeamXEditor;
         }
 
         public void Initialize()

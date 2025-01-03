@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -304,7 +305,7 @@ namespace TeamXClient
                 Debug.Log(path);
 
                 // Split the path to extract the project name and file name
-                string[] parts = path.Split('\\');
+                string[] parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length >= 3) // Ensure path has enough components
                 {
                     string projectName = parts[0];
