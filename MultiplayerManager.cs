@@ -63,6 +63,16 @@ namespace TeamXClient
             }
         }
 
+        public string GetPlayerName(ulong steamID)
+        {
+            if(players.ContainsKey(steamID))
+            {
+                return players[steamID].name;
+            }
+
+            return "<playernotfound>";
+        }
+
         /// <summary>
         /// Removes a player from the multiplayer session.
         /// </summary>

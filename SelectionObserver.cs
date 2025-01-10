@@ -114,6 +114,7 @@ namespace TeamXClient
             // Notify the editor of changes.
             if (removedUIDs.Count > 0)
             {
+                Plugin.Instance.Log("InspectSelection: Removed UIDs: " + removedUIDs.Count, LogType.Debug);
                 if (notify)
                 {
                     Plugin.Instance.editor.OnBlocksRemovedFromSelection(new List<string>(removedUIDs));
@@ -124,6 +125,7 @@ namespace TeamXClient
 
             if (addedUIDs.Count > 0)
             {
+                Plugin.Instance.Log("InspectSelection: Added UIDs: " + addedUIDs.Count, LogType.Debug);
                 if (notify)
                 {
                     Plugin.Instance.editor.OnBlocksAddedToSelection(new List<string>(addedUIDs));

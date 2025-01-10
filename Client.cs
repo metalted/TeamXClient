@@ -517,6 +517,8 @@ namespace TeamXClient
             };
 
             Plugin.Instance.multiplayer.AddPlayer(playerData);
+
+            PlayerManager.Instance.messenger.Log($"{playerData.name} has joined the game!", 2f);
         }
 
         /// <summary>
@@ -525,7 +527,11 @@ namespace TeamXClient
         /// <param name="playerLeft">The <see cref="PlayerLeftPacket"/> containing the player's Steam ID.</param>
         public void HandlePlayerLeft(PlayerLeftPacket playerLeft)
         {
+            string name = Plugin.Instance.multiplayer.GetPlayerName(playerLeft.SteamID);
+
             Plugin.Instance.multiplayer.RemovePlayer(playerLeft.SteamID);
+
+            PlayerManager.Instance.messenger.Log($"{name} has left the game!", 2f);
         }
 
         /// <summary>

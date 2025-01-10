@@ -19,7 +19,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.1.2";
+        public const string pluginVersion = "1.1.3";
 
         public static Plugin Instance;
         
@@ -37,7 +37,7 @@ namespace TeamXClient
         //Creates the client if not initialized yet.
         private bool init = false;
         //Which messages to show in the console (0 = debug, 1 = messages)
-        public int logLevel = 1;
+        public int logLevel = 0;
 
         //Config settings for ip address and port.
         public ConfigEntry<string> cfg_serverIP;
