@@ -86,6 +86,11 @@ namespace TeamXClient
             cosmetics.IDsToCosmetics(cosmeticIDs);
             return cosmetics;
         }
+
+        public string ToDebugString()
+        {
+            return $"{zeepkist},{frontWheels},{rearWheels},{paraglider},{horn},{hat},{glasses},{color_body},{color_leftArm},{color_rightArm},{color_leftLeg},{color_rightLeg},{color}";
+        }
     }
 
     /// <summary>

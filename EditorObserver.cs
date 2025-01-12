@@ -79,6 +79,31 @@ namespace TeamXClient
             if(block == null)
             {
                 Plugin.Instance.Log("BlockUpdate: Block = null", LogType.Error);
+
+                //As the block is not found in the editor anymore, destroy it (this causes issues)
+                //As the block is not found in the online editor anymore, recreate it so the games are synced again.
+
+                block = new Block()
+                {
+                    ID = afterState.blockID,
+                    PositionX = afterState.position.x,
+                    PositionY = afterState.position.y,
+                    PositionZ = afterState.position.z,
+                    EulerAnglesX = afterState.eulerAngles.x,
+                    EulerAnglesY = afterState.eulerAngles.y,
+                    EulerAnglesZ = afterState.eulerAngles.z,
+                    LocalScaleX = afterState.localScale.x,
+                    LocalScaleY = afterState.localScale.y,
+                    LocalScaleZ = afterState.localScale.z,
+                    Properties = afterState.properties,
+                    UID = afterState.UID,
+                    SteamID = Plugin.Instance.client.ClientSteamID
+                };
+
+                //Store the block
+                editor.Add(block);
+
+                Plugin.Instance.client.SendBlockCreate(block);
                 return;
             }
 

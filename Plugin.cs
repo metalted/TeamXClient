@@ -19,7 +19,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.1.3";
+        public const string pluginVersion = "1.1.4";
 
         public static Plugin Instance;
         
@@ -37,11 +37,13 @@ namespace TeamXClient
         //Creates the client if not initialized yet.
         private bool init = false;
         //Which messages to show in the console (0 = debug, 1 = messages)
-        public int logLevel = 0;
+        public int logLevel = 1;
 
         //Config settings for ip address and port.
         public ConfigEntry<string> cfg_serverIP;
         public ConfigEntry<int> cfg_serverPort;
+        public ConfigEntry<KeyCode> cfg_showPlayerList;
+        private bool playerListShouldBeVisible = false;
 
         private void Awake()
         {
@@ -58,6 +60,7 @@ namespace TeamXClient
 
             cfg_serverIP = Config.Bind("Settings", "Server IP", "127.0.0.1", "The IP address of the TeamX server");
             cfg_serverPort = Config.Bind("Settings", "Server Port", 8080, "The Port of the TeamX server.");
+            cfg_showPlayerList = Config.Bind("Settings", "Show Player List", KeyCode.None, "Hold this key to show the current online players in the TeamX server.");
         }
 
         public int GetBlockAllowance()
@@ -78,6 +81,17 @@ namespace TeamXClient
         public bool IsTeamXEditor()
         {
             return game.gameState == GameManager.GameState.TeamXEditor;
+        }
+
+        public void OnGUI()
+        {
+            if(IsTeamXEditor())
+            {
+                if(playerListShouldBeVisible)
+                {
+                    InterfaceManager.ShowPlayerList();
+                }
+            }
         }
 
         public void Initialize()
@@ -118,6 +132,16 @@ namespace TeamXClient
                 catch (InvalidOperationException ex)
                 {
                     Log($"Error: {ex.Message}", LogType.Error);
+                }
+
+                if(Input.GetKeyDown(cfg_showPlayerList.Value))
+                {
+                    playerListShouldBeVisible = true;
+                }
+
+                if(Input.GetKeyUp(cfg_showPlayerList.Value))
+                {
+                    playerListShouldBeVisible = false;
                 }
             }
         }

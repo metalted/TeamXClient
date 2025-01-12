@@ -452,6 +452,8 @@ namespace TeamXClient
         {
             PlayerData localPlayer = Utils.GetLocalPlayerData();
 
+            Plugin.Instance.Log($"Access Granted, Local Player Data: {localPlayer.ToDebugString()}", LogType.Debug);
+
             // Create and send player join packet
             PlayerJoinPacket playerJoin = new PlayerJoinPacket
             {
@@ -515,6 +517,8 @@ namespace TeamXClient
                 state = 0,
                 steamID = playerJoinPacket.SteamID
             };
+
+            Plugin.Instance.Log($"PlayerJoined, Player Data: {playerData.ToDebugString()}", LogType.Debug);
 
             Plugin.Instance.multiplayer.AddPlayer(playerData);
 
@@ -594,6 +598,9 @@ namespace TeamXClient
 
                 //Instantiate
                 Plugin.Instance.StartCoroutine(Plugin.Instance.editor.InstantiateFromState());
+
+                //Reset ctrl z
+                Plugin.Instance.editor.Central.undoRedo.ResetUndoList(false);
             }
         }
 

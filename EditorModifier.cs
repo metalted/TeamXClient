@@ -34,7 +34,7 @@ namespace TeamXClient
         /// </summary>
         /// <param name="block">The block to create.</param>
         /// <exception cref="ArgumentNullException">Thrown if the block is null.</exception>
-        public void CreateBlock(Block block)
+        public void CreateBlock(Block block, bool recalculate = true)
         {
             if (block == null)
             {
@@ -42,7 +42,7 @@ namespace TeamXClient
             }
 
             BlockPropertyJSON blockPropertyJSON = block.ToBlockPropertyJSON();
-            CreateBlock(blockPropertyJSON);
+            CreateBlock(blockPropertyJSON, recalculate);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace TeamXClient
         /// </summary>
         /// <param name="blockPropertyJSON">The block properties to use for creating the block.</param>
         /// <returns>True if the block was created successfully.</returns>
-        public void CreateBlock(BlockPropertyJSON blockPropertyJSON)
+        public void CreateBlock(BlockPropertyJSON blockPropertyJSON, bool recalculate = true)
         {
             if (blockPropertyJSON == null)
             {
@@ -58,7 +58,11 @@ namespace TeamXClient
             }
 
             editor.Central.undoRedo.GenerateNewBlock(blockPropertyJSON, blockPropertyJSON.UID);
-            editor.Central.validation.RecalcBlocksAndDraw(false);
+
+            if (recalculate)
+            {
+                editor.Central.validation.RecalcBlocksAndDraw(false);
+            }
         }
 
         /// <summary>

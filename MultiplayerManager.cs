@@ -28,6 +28,16 @@ namespace TeamXClient
         public CharacterMode LocalPlayerMode;
 
         /// <summary>
+        /// Last know player location in the editor.
+        /// </summary>
+        public PlayerStateData lastKnownEditorLocation = new PlayerStateData() { 
+            Mode = 0,
+            Position = Vector3.zero,
+            Rotation = Vector3.zero,
+            SteamID = 0
+        };
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MultiplayerManager"/> class.
         /// </summary>
         public MultiplayerManager()
@@ -71,6 +81,11 @@ namespace TeamXClient
             }
 
             return "<playernotfound>";
+        }
+
+        public string[] GetAllPlayerNames()
+        {
+            return players.Values.Select(player => player.name).ToArray();
         }
 
         /// <summary>

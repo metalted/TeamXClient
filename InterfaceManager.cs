@@ -10,8 +10,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace TeamXClient
-{
-   
+{   
     public static class InterfaceManager
     {
         public static TeamXPanelComponent teamXToolbarButton;
@@ -220,6 +219,35 @@ namespace TeamXClient
         public static void StandardRecolorButton(LEV_CustomButton button)
         {
             RecolorButton(button, green, lightGreen, lightestGreen, false);
+        }
+
+        public static void ShowPlayerList()
+        {
+            float startHeight = Screen.height * 0.15f;
+            float boxWidth = Screen.width * 0.75f / 5f; // Width of each column
+            float boxHeight = Screen.height * 0.85f / 20f; // Height of each row
+            float columnSpacing = boxWidth + 10f; // Spacing between columns
+            float rowSpacing = boxHeight + 5f; // Spacing between rows
+            int maxRows = 20; // Max players per column
+
+            string localPlayerName = PlayerManager.Instance.steamAchiever.GetPlayerName(false);
+            string[] connectedPlayerNames = Plugin.Instance.multiplayer.GetAllPlayerNames();
+
+            // Show the local player first.
+            GUI.Box(new Rect(0, startHeight, boxWidth, boxHeight), localPlayerName);
+
+            // Show the rest of the players underneath.
+            int playerCount = connectedPlayerNames.Length;
+            for (int i = 0; i < playerCount; i++)
+            {
+                int row = (i + 1) % maxRows; // Row position
+                int column = (i + 1) / maxRows; // Column position
+
+                float xPosition = column * columnSpacing; // Column offset
+                float yPosition = startHeight + row * rowSpacing; // Row offset
+
+                GUI.Box(new Rect(xPosition, yPosition, boxWidth, boxHeight), connectedPlayerNames[i]);
+            }
         }
     }    
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using HarmonyLib;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TeamXClient.Extensions;
@@ -126,18 +127,18 @@ namespace TeamXClient
             Modifier.UpdateSkybox(Skybox);
             Modifier.UpdateFloor(Floor);
 
-            int blockCount = Blocks.Count;
+            /*int blockCount = Blocks.Count;
             int batchCount = Mathf.Max(10, Mathf.FloorToInt(blockCount / 60f));
-            int counter = 0;
+            int counter = 0;*/
 
             foreach (KeyValuePair<string, Block> block in Blocks)
             {
-                Modifier.CreateBlock(block.Value);
-                counter++;
+                Modifier.CreateBlock(block.Value, false);
+                /*counter++;
                 if (counter % batchCount == 0)
                 {
                     yield return new WaitForEndOfFrame();
-                }
+                }*/
             }
 
             Central.validation.RecalcBlocksAndDraw(false);
@@ -170,6 +171,11 @@ namespace TeamXClient
         {
             int count = Blocks.Values.Count(block => block.SteamID == steamID);
             return count;
+        }
+
+        public int GetBlockCount()
+        {
+            return Blocks.Count;
         }
 
         /// <summary>
@@ -240,6 +246,44 @@ namespace TeamXClient
                     Plugin.Instance.client.SendDeselection(uid);
                 }
             }
-        }      
+        }
+    }
+
+    [HarmonyPatch(typeof(LEV_ValidationLock), "RecalculateBlocks")]
+    public class LEVValidationLockRecalculateBlocks
+    {
+        public static bool Prefix(ref bool setDebounce, LEV_ValidationLock __instance)
+        {
+            if(!Plugin.Instance.IsTeamXEditor())
+            {
+                return true;
+            }
+
+            __instance.amountOfBlocks = Plugin.Instance.editor.GetBlockCount();
+            __instance.levelTip.text = "TeamX";
+
+            if (setDebounce)
+            {
+                __instance.recalcDebounce = 1;
+            }
+
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(LEV_ValidationLock), "UpdateValidationText")]
+    public class LEVValidationUpdateValidationText
+    {
+        public static bool Prefix(LEV_ValidationLock __instance)
+        {
+            if (!Plugin.Instance.IsTeamXEditor())
+            {
+                return true;
+            }
+
+            __instance.debugText.text = __instance.amountOfBlocks.ToString() + " " + I2.Loc.LocalizationManager.GetTranslation("ABC_Blocks");
+
+            return false;
+        }
     }
 }

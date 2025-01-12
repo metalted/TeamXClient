@@ -88,17 +88,20 @@ namespace TeamXClient
             {
                 if (gameState == GameState.EnteringTeamXFromMainMenu)
                 {
+                    PlayerManager.Instance.weLoadedLevelEditorFromMainMenu = true;
                     gameState = GameState.TeamXEditor;
                 }
 
                 if (gameState == GameState.TeamXGame)
                 {
+                    PlayerManager.Instance.weLoadedLevelEditorFromMainMenu = false;
                     gameState = GameState.TeamXEditor;
                 }
 
                 if (gameState == GameState.TeamXEditor)
                 {
                     multiplayer.LocalPlayerMode = CharacterMode.Build;
+
                     editor.SetCentral(instance);
 
                     var cameraTransform = instance.cam.cameraTransform;
@@ -123,12 +126,20 @@ namespace TeamXClient
                     globalLevel.IsTestLevel = false;
                     manager.unsavedContent = false;
 
+                    //Put the player back at their original location.
+                    if (multiplayer.lastKnownEditorLocation.SteamID != 0)
+                    {
+                        //Data has been assigned previously as the SteamID has a value.
+                        central.cam.cameraTransform.position = multiplayer.lastKnownEditorLocation.Position;
+                    }
+
                     if (manager.weLoadedLevelEditorFromMainMenu)
                     {
                         return;
                     }
 
-                    central.undoRedo.historyList = manager.tempUndoList;
+                    //Assign ctrl-z history list back to the game.
+                    central.undoRedo.ResetUndoList(true);             
                 }
             }
         }
@@ -187,6 +198,12 @@ namespace TeamXClient
             var client = Plugin.Instance.client;
 
             stateData.Mode = (byte)multiplayer.LocalPlayerMode;
+
+            if(gameState == GameState.TeamXEditor)
+            {
+                multiplayer.lastKnownEditorLocation = stateData;
+            }
+
             client.SendPlayerState(stateData);
         }
 
