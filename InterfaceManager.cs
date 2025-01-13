@@ -1,75 +1,88 @@
-﻿using I2.Loc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace TeamXClient
 {   
+    /// <summary>
+    /// This class is responsible for anything UI related, be it panels, playerlist or messages.
+    /// </summary>
     public static class InterfaceManager
     {
+        //The button in the toolbar for admins.
         public static TeamXPanelComponent teamXToolbarButton;
 
+        //All the different panels used for TeamX admins.
         public static TeamXMainPanel mainPanel;
         public static TeamXPermissionPanel permissionPanel;
         public static TeamXSaveConfigurationPanel saveConfigurationPanel;
         public static TeamXLevelManagerPanel levelManagerPanel;
 
-        public static LEV_LevelEditorCentral _central;
-
-        public static Color lightestGreen = new Color(0.336f, 1f, 0.766f); //86.196.255
-        public static Color lightGreen = new Color(0f, 1f, 0.656f, 1f); //0.168.255
-        public static Color green = new Color(0, 0.82f, 0.547f,  1f); //0.140.210
+        //Predefined colors for the UI.
+        public static Color lightestGreen = new Color(0.336f, 1f, 0.766f);
+        public static Color lightGreen = new Color(0f, 1f, 0.656f, 1f);
+        public static Color green = new Color(0, 0.82f, 0.547f,  1f);
         public static Color darkGreen = new Color(0, 0.547f, 0.371f,  1f);
         public static Color darkestGreen = new Color(0, 0.348f, 0.238f, 1f);
         public static Color grey = new Color(0.3f, 0.3f, 0.3f, 1f);
         public static Color darkgrey = new Color(0.2f, 0.2f, 0.2f, 1f);
 
+        /// <summary>
+        /// Called when we enter the main menu to create the teamkist editor button.
+        /// </summary>
         public static void SetupMainMenuUI()
         {
             GenerateLevelEditorOnlineButton();
         }
 
-        public static void SetupLevelEditorUI(LEV_LevelEditorCentral central, bool management = false)
+        /// <summary>
+        /// Called when the level editor is opened in TeamX mode. Will setup all the required UI.
+        /// </summary>
+        /// <param name="management"></param>
+        public static void SetupLevelEditorUI(bool management = false)
         {
-            _central = central;
             DisableLoadButton();
 
             if (management)
             {
-                InitializePanels(central);
-                CreateToolbarButtons(central);
+                InitializePanels();
+                CreateToolbarButton();
             }
         }
 
+        /// <summary>
+        /// Called when the main panel is opened.
+        /// </summary>
         public static void OnPanelOpen()
         {
-            _central.tool.DisableAllTools();
-            _central.tool.RecolorButtons();
-            _central.tool.currentTool = 3;
-            _central.tool.inspectorTitle.text = "";
+            Plugin.Instance.editor.Central.tool.DisableAllTools();
+            Plugin.Instance.editor.Central.tool.RecolorButtons();
+            Plugin.Instance.editor.Central.tool.currentTool = 3;
+            Plugin.Instance.editor.Central.tool.inspectorTitle.text = "";
         }
 
+        /// <summary>
+        /// Called when one of the panels is closed.
+        /// </summary>
         public static void OnPanelClose()
         {
-            _central.tool.EnableEditTool();
-            _central.tool.RecolorButtons();
-            _central.cam.OverrideOutsideGameView(false);
+            Plugin.Instance.editor.Central.tool.EnableEditTool();
+            Plugin.Instance.editor.Central.tool.RecolorButtons();
+            Plugin.Instance.editor.Central.cam.OverrideOutsideGameView(false);
         }
 
-        private static void CreateToolbarButtons(LEV_LevelEditorCentral central)
+        /// <summary>
+        /// Creates the TeamX button at the top left of the tool bar.
+        /// </summary>
+        private static void CreateToolbarButton()
         {
-            RectTransform teamXToolbarRect = GameObject.Instantiate(central.tool.button_settings, central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            RectTransform teamXToolbarRect = GameObject.Instantiate(Plugin.Instance.editor.Central.tool.button_settings, Plugin.Instance.editor.Central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
             teamXToolbarButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, teamXToolbarRect);
             teamXToolbarButton.SetRectAnchors(0.005f, 0.1f, 0.025f, 0.9f);
             teamXToolbarButton.BindButton(() =>
             {
-                central.selection.DeselectAllBlocks(false, "");
+                Plugin.Instance.editor.Central.selection.DeselectAllBlocks(false, "");
 
                 if (mainPanel != null)
                 {
@@ -78,7 +91,9 @@ namespace TeamXClient
             });           
         }
 
-        //This function will split the regular level editor button in to two buttons, one for regular and one for teamkist.
+        /// <summary>
+        /// Splits the regular level editor button in to two buttons, one for the regular editor and one for TeamX.
+        /// </summary>
         private static void GenerateLevelEditorOnlineButton()
         {
             //Get the two current buttons.
@@ -102,8 +117,12 @@ namespace TeamXClient
 
             //Remove the listener of the new button.
             GenericButton editorOnlineGenericButton = editorOnlineButton.GetComponent<GenericButton>();
-            editorOnlineGenericButton.normalColor = new Color(0, 0.547f, 0.82f, 1f);
+            editorOnlineGenericButton.normalColor = green;
+            editorOnlineGenericButton.hoverColor = lightGreen;
+            editorOnlineGenericButton.clickColor = lightestGreen;
+
             editorOnlineGenericButton.buttonImage.color = editorOnlineGenericButton.normalColor;
+
             editorOnlineGenericButton.onClick.RemoveAllListeners();
             for (int i = editorOnlineGenericButton.onClick.GetPersistentEventCount() - 1; i >= 0; i--)
             {
@@ -116,10 +135,12 @@ namespace TeamXClient
             //Get the text component, remove the localizer and change the text
             TextMeshProUGUI buttonText = editorOnlineGenericButton.GetComponentInChildren<TextMeshProUGUI>();
             GameObject.Destroy(buttonText.GetComponent<I2.Loc.Localize>());
-            buttonText.text = "Teamkist Editor";
+            buttonText.text = "TeamX Editor";
         }
 
-        //When the custom button is clicked.
+        /// <summary>
+        /// Function that gets called when the TeamX button is clicked in the main menu.
+        /// </summary>
         private static void OnEditorOnlineButton()
         {
             try
@@ -138,7 +159,9 @@ namespace TeamXClient
             }
         }
 
-        //Grey out the load button in the level editor while in teamkist mode, because loading a level will mess up the server.
+        /// <summary>
+        /// Greys out the load button in the level editor while in TeamX mode, because loading a level will mess up the server.
+        /// </summary>
         private static void DisableLoadButton()
         {
             LEV_CustomButton loadButton = Plugin.Instance.editor.Central.tool.button_load;
@@ -155,21 +178,28 @@ namespace TeamXClient
             }
         }
 
-        private static void InitializePanels(LEV_LevelEditorCentral central)
+        /// <summary>
+        /// Create the TeamX admin panels.
+        /// </summary>
+        private static void InitializePanels()
         {
-            mainPanel = Utils.CreatePanel(central, "TeamX").gameObject.AddComponent<TeamXMainPanel>();
+            mainPanel = Utils.CreatePanel(Plugin.Instance.editor.Central, "TeamX").gameObject.AddComponent<TeamXMainPanel>();
             mainPanel.Initialize();
 
-            permissionPanel = Utils.CreatePanel(central, "TeamX Permissions").gameObject.AddComponent<TeamXPermissionPanel>();
+            permissionPanel = Utils.CreatePanel(Plugin.Instance.editor.Central, "TeamX Permissions").gameObject.AddComponent<TeamXPermissionPanel>();
             permissionPanel.Initialize();
 
-            saveConfigurationPanel = Utils.CreatePanel(central, "TeamX Save Configuration").gameObject.AddComponent<TeamXSaveConfigurationPanel>();
+            saveConfigurationPanel = Utils.CreatePanel(Plugin.Instance.editor.Central, "TeamX Save Configuration").gameObject.AddComponent<TeamXSaveConfigurationPanel>();
             saveConfigurationPanel.Initialize();
 
-            levelManagerPanel = Utils.CreatePanel(central, "TeamX Level Manager").gameObject.AddComponent<TeamXLevelManagerPanel>();
+            levelManagerPanel = Utils.CreatePanel(Plugin.Instance.editor.Central, "TeamX Level Manager").gameObject.AddComponent<TeamXLevelManagerPanel>();
             levelManagerPanel.Initialize();
         }
 
+        /// <summary>
+        /// Helper function for cleaning a copied ui element.
+        /// </summary>
+        /// <param name="button"></param>
         public static void UnbindButton(LEV_CustomButton button)
         {
             button.onClick.RemoveAllListeners();
@@ -187,11 +217,24 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Bind an action to a button click
+        /// </summary>
+        /// <param name="button">The button that will be clicked.</param>
+        /// <param name="action">The action to perform.</param>
         public static void RebindButton(LEV_CustomButton button, UnityAction action)
         {
             button.onClick.AddListener(action);
         }
 
+        /// <summary>
+        /// Recolor a button.
+        /// </summary>
+        /// <param name="button">The button to recolor.</param>
+        /// <param name="normalColor">The color in standard non interacted state.</param>
+        /// <param name="hoverColor">The color when the user hovers over the button.</param>
+        /// <param name="clickColor">The color when the user is holding mouse button over this button (:active)</param>
+        /// <param name="recolorAllNormal">If true, will use the normal color for all colors, and hover and click parameters will be ignored.</param>
         public static void RecolorButton(LEV_CustomButton button, Color normalColor, Color hoverColor, Color clickColor, bool recolorAllNormal = false)
         {
             button.normalColor = normalColor;
@@ -216,11 +259,18 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Recolor a button in the standard TeamX color palette.
+        /// </summary>
+        /// <param name="button"></param>
         public static void StandardRecolorButton(LEV_CustomButton button)
         {
             RecolorButton(button, green, lightGreen, lightestGreen, false);
         }
 
+        /// <summary>
+        /// An OnGUI function that will show a simple list on screen with the currently connected players.
+        /// </summary>
         public static void ShowPlayerList()
         {
             float startHeight = Screen.height * 0.15f;

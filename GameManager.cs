@@ -1,9 +1,4 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using UnityEngine;
 
 namespace TeamXClient
@@ -110,13 +105,13 @@ namespace TeamXClient
                         cameraTransform.gameObject.AddComponent<PlayerObserver>();
                     }
 
-                    Plugin.Instance.StartCoroutine(editor.InstantiateFromState());
+                    editor.InstantiateFromState();
 
                     var central = editor.Central;
                     var globalLevel = central.testMap.GlobalLevel;
                     var manager = central.manager;
 
-                    InterfaceManager.SetupLevelEditorUI(central, Plugin.Instance.perms.IsAdmin());
+                    InterfaceManager.SetupLevelEditorUI(Plugin.Instance.perms.IsAdmin());
 
                     if (!globalLevel.IsTestLevel)
                     {
@@ -229,63 +224,5 @@ namespace TeamXClient
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("LevelEditor2");
         }
-    }
-
-    //Called when we enter the main menu.
-    [HarmonyPatch(typeof(MainMenuUI), "Awake")]
-    public class TKMainMenuUIAwakePatch
-    {
-        public static void Prefix()
-        {
-            Plugin.Instance.game.OnMainMenu();
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_LevelEditorCentral), "Awake")]
-    public class LevelEditorCentralAwakePatch
-    {
-        public static void Postfix(LEV_LevelEditorCentral __instance)
-        {
-            Plugin.Instance.game.OnLevelEditor(__instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(SetupGame), "Awake")]
-    public class SetupGameAwakePatch
-    {
-        public static void Postfix(SetupGame __instance)
-        {
-            Plugin.Instance.game.OnGame(__instance);
-        }
-    }
-
-    [HarmonyPatch(typeof(GameMaster), "SpawnPlayers")]
-    public class GameMasterSpawnPlayersPatch
-    {
-        public static void Postfix(GameMaster __instance)
-        {
-            Plugin.Instance.game.OnSpawnPlayers(__instance);
-        }
-    }
-
-    //Called when a players state changes
-    [HarmonyPatch(typeof(New_ControlCar), "SetZeepkistState")]
-    public class NewControlCarSetZeepkistStatePatch
-    {
-        public static void Prefix(ref byte newState, ref string source, ref bool playSound)
-        {
-            Plugin.Instance.game.OnStateChange(newState);
-        }
-    }
-
-    //This patch will make sure Zeepkist doesnt load its own file when returning to the level editor from testing.
-    //The level should always be loaded from the storage script.
-    [HarmonyPatch(typeof(LEV_TestMap), "Start")]
-    public class TKTestMapStartPatch
-    {
-        public static bool Prefix(LEV_TestMap __instance)
-        {
-            return Plugin.Instance.game.gameState != GameManager.GameState.TeamXEditor;
-        }
-    }
+    }   
 }

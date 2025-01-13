@@ -119,26 +119,16 @@ namespace TeamXClient
         }
 
         /// <summary>
-        /// Instantiates blocks in the editor from the current state in batches.
+        /// Instantiates blocks in the editor from the current state.
         /// </summary>
-        public IEnumerator InstantiateFromState()
+        public void InstantiateFromState()
         {
-            yield return new WaitForEndOfFrame();
             Modifier.UpdateSkybox(Skybox);
             Modifier.UpdateFloor(Floor);
-
-            /*int blockCount = Blocks.Count;
-            int batchCount = Mathf.Max(10, Mathf.FloorToInt(blockCount / 60f));
-            int counter = 0;*/
 
             foreach (KeyValuePair<string, Block> block in Blocks)
             {
                 Modifier.CreateBlock(block.Value, false);
-                /*counter++;
-                if (counter % batchCount == 0)
-                {
-                    yield return new WaitForEndOfFrame();
-                }*/
             }
 
             Central.validation.RecalcBlocksAndDraw(false);
@@ -167,12 +157,21 @@ namespace TeamXClient
             return block;
         }
 
+        /// <summary>
+        /// Gets the count of blocks placed by a specific player.
+        /// </summary>
+        /// <param name="steamID">The steamID of the player.</param>
+        /// <returns>The amount of blocks placed by that player.</returns>
         public int GetBlockCountBy(ulong steamID)
         {
             int count = Blocks.Values.Count(block => block.SteamID == steamID);
             return count;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public int GetBlockCount()
         {
             return Blocks.Count;
@@ -247,43 +246,5 @@ namespace TeamXClient
                 }
             }
         }
-    }
-
-    [HarmonyPatch(typeof(LEV_ValidationLock), "RecalculateBlocks")]
-    public class LEVValidationLockRecalculateBlocks
-    {
-        public static bool Prefix(ref bool setDebounce, LEV_ValidationLock __instance)
-        {
-            if(!Plugin.Instance.IsTeamXEditor())
-            {
-                return true;
-            }
-
-            __instance.amountOfBlocks = Plugin.Instance.editor.GetBlockCount();
-            __instance.levelTip.text = "TeamX";
-
-            if (setDebounce)
-            {
-                __instance.recalcDebounce = 1;
-            }
-
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_ValidationLock), "UpdateValidationText")]
-    public class LEVValidationUpdateValidationText
-    {
-        public static bool Prefix(LEV_ValidationLock __instance)
-        {
-            if (!Plugin.Instance.IsTeamXEditor())
-            {
-                return true;
-            }
-
-            __instance.debugText.text = __instance.amountOfBlocks.ToString() + " " + I2.Loc.LocalizationManager.GetTranslation("ABC_Blocks");
-
-            return false;
-        }
-    }
+    }    
 }

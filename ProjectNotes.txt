@@ -1,0 +1,39 @@
+﻿TODO List
+==================================================================================================================================================
+- Add a button in the admin panel that will save the current level directly, so you dont have to wait for the auto save.
+- Add network message for chat.
+- Add more screen messages about game states and actions.
+
+BUGS
+==================================================================================================================================================
+- Fix the cosmetics.
+
+IDEAS
+==================================================================================================================================================
+- A way to assign regions to players so they can only build in that location.
+
+SCRIPTS								STATE									DOCS		NOTES
+==================================================================================================================================================
+Block.cs							Done									Yes			-
+Client.cs							Done (Can be expanded for messages)		Yes			Added regions to make it a bit more manageable.
+EditorManager.cs					Done									Yes			Load coroutine is now normal function, moved patches out.
+EditorModifier.cs					Done									Yes			-
+EditorObserver.cs					Done									Yes			Moved patches out.
+GameManager.cs						Done									Yes			-
+InterfaceManagers.cs				Done									Yes			Removed the central reference so the plugin only uses one.
+MultiplayerManager.cs				Done									Yes			-
+Patches.cs							Done									Yes			-
+PermissionManager.cs				Done									Yes			-
+PermissionProfile.cs				Done									Yes			-
+PlayerObserver.cs					Done									Yes			-
+Plugin.cs							...										...			...
+SelectionObserver.cs				Done									Yes			Moved patches out.
+Shpleeble.cs						Done									Yes			-
+TeamXLevelManagerPanel.cs			Needs Save Now Button					No			-
+TeamXMainPanel.cs					Done									No			-
+TeamXPanel.cs						Done									No			-
+TeamXPanelComponent.cs				Done									No			-
+TeamXPermissionPanel.cs				Done									No			-
+TeamXPermissionPanelEntry.cs		Done									No			-
+TeamXSaveConfigurationPanel.cs		Done									No			-
+Utils.cs							

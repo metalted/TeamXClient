@@ -119,6 +119,10 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Remove all the blocks from the editor.
+        /// </summary>
+        /// <remarks>First makes sure all blocks are deselected.</remarks>>
         public void ClearEditor()
         {
             foreach(BlockProperties blockProperties in editor.Central.undoRedo.allBlocksDictionary.Values)

@@ -133,41 +133,5 @@ namespace TeamXClient
                 addedUIDs.Clear();
             }
         }
-    }
-
-    [HarmonyPatch(typeof(LEV_GizmoHandler), "DuplicateSelectedObjects")]
-    public class LEVGizmoHandlerDuplicateSelectedObjectsPatch
-    {
-        public static void Postfix()
-        {
-            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
-            {
-                Plugin.Instance.editor.SelectionObserver.InspectSelection();
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_Selection), "DeselectAllBlocks")]
-    public class LEVSelectionDeselectAllBlocksPatch
-    {
-        public static void Postfix()
-        {
-            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
-            {
-                Plugin.Instance.editor.SelectionObserver.InspectSelection();
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(LEV_Selection), "ClickBuilding")]
-    public class LEVSelectionClickBuilding
-    {
-        public static void Postfix()
-        {
-            if (Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor)
-            {
-                Plugin.Instance.editor.SelectionObserver.InspectSelection();
-            }
-        }
-    }
+    }    
 }

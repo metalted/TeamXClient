@@ -50,7 +50,6 @@ namespace TeamXClient
         /// </summary>
         /// <param name="appID">The applications identifier.</param>
         /// <remarks>The application identifier needs to match the application identifier on the server.</remarks>
-        /// 
         private void StartClient(string appID)
         {
             netPeerConfiguration = new NetPeerConfiguration(appID);
@@ -60,89 +59,8 @@ namespace TeamXClient
         }
 
         /// <summary>
-        /// Connects the client to the server with the specified IP address and port.
+        /// Try to start the connection process with the server configured in the settings.
         /// </summary>
-        /// <param name="ip">The IP address of the server (e.g., "127.0.0.1").</param>
-        /// <param name="port">The port of the server (e.g., 8080).</param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the client is not initialized or if the client is already connecting or connected.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        /// Thrown if the provided IP address or port is invalid.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if an unexpected error occurs while connecting.
-        /// </exception>
-        public void Connect(string ip, int port)
-        {
-            // Validate the input parameters
-            if (string.IsNullOrWhiteSpace(ip))
-            {
-                throw new ArgumentException("IP address cannot be null or empty.", nameof(ip));
-            }
-
-            if (port <= 0 || port > 65535)
-            {
-                throw new ArgumentException("Port must be between 1 and 65535.", nameof(port));
-            }
-
-            // Ensure the client is initialized
-            if (client == null)
-            {
-                throw new InvalidOperationException("Client is not initialized.");
-            }
-
-            // Ensure the client is not already connecting or connected
-            if (ConnectionStatus == ConnectionStatus.Connecting || ConnectionStatus == ConnectionStatus.Connected)
-            {
-                throw new InvalidOperationException("Client is already connecting or connected.");
-            }
-
-            try
-            {
-                ConnectionStatus = ConnectionStatus.Connecting;
-                client.Connect(ip, port);
-            }
-            catch (Exception ex)
-            {
-                // Handle other unexpected errors
-                ConnectionStatus = ConnectionStatus.Disconnected;
-                throw new InvalidOperationException("An unexpected error occurred while connecting.", ex);
-            }
-        }
-
-        /// <summary>
-        /// Disconnects the client from the server.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the client is not initialized.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the client is already disconnected.
-        /// </exception>
-        public void Disconnect()
-        {
-            if (client == null)
-            {
-                throw new InvalidOperationException("Client is not initialized.");
-            }
-
-            if (ConnectionStatus == ConnectionStatus.Disconnected)
-            {
-                throw new InvalidOperationException("Client is already disconnected.");
-            }
-
-            try
-            {
-                client.Disconnect("");
-                ConnectionStatus = ConnectionStatus.Disconnecting;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("An error occurred while disconnecting the client.", ex);
-            }
-        }
-
         public void AttemptToConnectToServer()
         {
             if (client == null)
@@ -176,6 +94,9 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Try to close the connection with the currently connected server.
+        /// </summary>
         public void AttemptDisconnect()
         {
             try
@@ -192,6 +113,38 @@ namespace TeamXClient
             {
                 // Catch any unexpected exceptions
                 Plugin.Instance.Log($"Unexpected error: {ex.Message}", LogType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Disconnects the client from the server.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the client is not initialized.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the client is already disconnected.
+        /// </exception>
+        public void Disconnect()
+        {
+            if (client == null)
+            {
+                throw new InvalidOperationException("Client is not initialized.");
+            }
+
+            if (ConnectionStatus == ConnectionStatus.Disconnected)
+            {
+                throw new InvalidOperationException("Client is already disconnected.");
+            }
+
+            try
+            {
+                client.Disconnect("");
+                ConnectionStatus = ConnectionStatus.Disconnecting;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("An error occurred while disconnecting the client.", ex);
             }
         }
 
@@ -398,6 +351,8 @@ namespace TeamXClient
             }
         }
 
+        #region Connection and Players
+
         /// <summary>
         /// Handles the handshake request by responding with the client's Steam ID and
         /// updating the game state to <see cref="GameManager.GameState.WaitingForAccess"/>.
@@ -557,6 +512,33 @@ namespace TeamXClient
         }
 
         /// <summary>
+        /// Sends the player's current state to the server.
+        /// </summary>
+        /// <param name="stateData">The <see cref="PlayerStateData"/> representing the player's state.</param>
+        public void SendPlayerState(PlayerStateData stateData)
+        {
+            PlayerStatePacket playerState = new PlayerStatePacket()
+            {
+                SteamID = ClientSteamID,
+                PositionX = stateData.Position.x,
+                PositionY = stateData.Position.y,
+                PositionZ = stateData.Position.z,
+                EulerX = stateData.Rotation.x,
+                EulerY = stateData.Rotation.y,
+                EulerZ = stateData.Rotation.z,
+                Mode = stateData.Mode
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(playerState, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        #endregion
+
+        #region Editor Messages
+
+        /// <summary>
         /// Handles the editor state response by updating the editor state
         /// and transitioning the game state if necessary.
         /// </summary>
@@ -597,48 +579,10 @@ namespace TeamXClient
                 Plugin.Instance.editor.Modifier.ClearEditor();
 
                 //Instantiate
-                Plugin.Instance.StartCoroutine(Plugin.Instance.editor.InstantiateFromState());
+                Plugin.Instance.editor.InstantiateFromState();
 
                 //Reset ctrl z
                 Plugin.Instance.editor.Central.undoRedo.ResetUndoList(false);
-            }
-        }
-
-        public void HandleServerRules(ServerRulesResponsePacket serverRules)
-        {
-            PermissionProfile perms = new PermissionProfile(serverRules);
-            Plugin.Instance.perms.SetLocalProfile(perms);
-            
-            //We are currently in the main menu, requesting permissions before joining the server.
-            if (Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
-            {
-                //If the player is banned, go back to main menu state and attempt disconnecting.
-                if (Plugin.Instance.perms.IsBanned())
-                {
-                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
-                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
-
-                    AttemptDisconnect();                    
-                }
-                //The player is allowed to join the server, go ahead an load the editor.
-                else
-                {
-                    // Transition to the next state and load into the editor
-                    Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
-                    Plugin.Instance.game.LoadIntoEditorX();
-                }
-            }
-            //We are in a server and received an updated permission package.
-            else if(Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor || Plugin.Instance.game.gameState == GameManager.GameState.TeamXGame)
-            {
-                //Did we just get banned?
-                if (Plugin.Instance.perms.IsBanned())
-                {
-                    //Main menu is the default state for non TeamX players.
-                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
-                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
-                    AttemptDisconnect();
-                }
             }
         }
 
@@ -701,7 +645,7 @@ namespace TeamXClient
         {
             Plugin.Instance.editor.Skybox = editorSkybox.Skybox;
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 Plugin.Instance.editor.Modifier.UpdateSkybox(editorSkybox.Skybox);
             }
@@ -716,7 +660,7 @@ namespace TeamXClient
         {
             Plugin.Instance.editor.Floor = editorFloor.Floor;
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 Plugin.Instance.editor.Modifier.UpdateFloor(editorFloor.Floor);
             }
@@ -747,11 +691,11 @@ namespace TeamXClient
             Block packetBlock = updateDenied.BlockString.FromJson();
             Plugin.Instance.editor.Update(packetBlock);
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 BlockPropertyJSON blockPropertyJSON = packetBlock.ToBlockPropertyJSON();
                 Plugin.Instance.editor.Modifier.UpdateBlock(blockPropertyJSON);
-            }            
+            }
         }
 
         /// <summary>
@@ -764,10 +708,10 @@ namespace TeamXClient
             Block packetBlock = destroyDenied.BlockString.FromJson();
             Plugin.Instance.editor.Add(packetBlock);
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 Plugin.Instance.editor.Modifier.CreateBlock(packetBlock);
-            }            
+            }
         }
 
         /// <summary>
@@ -779,7 +723,7 @@ namespace TeamXClient
         {
             Plugin.Instance.editor.Floor = floorDenied.Floor;
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 Plugin.Instance.editor.Modifier.UpdateFloor(floorDenied.Floor);
             }
@@ -794,7 +738,7 @@ namespace TeamXClient
         {
             Plugin.Instance.editor.Skybox = skyboxDenied.Skybox;
 
-            if(Plugin.Instance.editor.InLevelEditor())
+            if (Plugin.Instance.editor.InLevelEditor())
             {
                 Plugin.Instance.editor.Modifier.UpdateSkybox(skyboxDenied.Skybox);
             }
@@ -813,31 +757,6 @@ namespace TeamXClient
             }
         }
 
-        public void HandlePermissionTableResponse(PermissionTableResponse tableResponse)
-        {
-            if(InterfaceManager.permissionPanel != null)
-            {
-                InterfaceManager.permissionPanel.ImportEntries(tableResponse.permissionTable);
-            }
-        }
-
-        public void HandleSaveConfigurationResponse(SaveConfigurationResponsePacket saveConfigurationResponse)
-        {
-            if (InterfaceManager.saveConfigurationPanel != null)
-            {
-                InterfaceManager.saveConfigurationPanel.UpdateValues(saveConfigurationResponse.AutoSaveInterval, saveConfigurationResponse.BackupCount, saveConfigurationResponse.KeepBackupWithNoEditors, saveConfigurationResponse.LevelName, saveConfigurationResponse.LoadBackupOnStart);
-            }
-        }
-
-        public void HandleLevelDirectoryResponse(LevelDirectoryResponsePacket levelDirectoryResponse)
-        {
-            if (InterfaceManager.levelManagerPanel != null)
-            {
-                InterfaceManager.levelManagerPanel.ImportDirectories(levelDirectoryResponse.LocalPaths);
-            }
-        }
-
-
         /// <summary>
         /// Sends a block creation request to the server.
         /// </summary>
@@ -855,7 +774,7 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
 
             //Is this block part of the selection?
-            if(Utils.IsBlockSelected(block.UID))
+            if (Utils.IsBlockSelected(block.UID))
             {
                 SendSelection(block.UID);
             }
@@ -930,29 +849,6 @@ namespace TeamXClient
         }
 
         /// <summary>
-        /// Sends the player's current state to the server.
-        /// </summary>
-        /// <param name="stateData">The <see cref="PlayerStateData"/> representing the player's state.</param>
-        public void SendPlayerState(PlayerStateData stateData)
-        {
-            PlayerStatePacket playerState = new PlayerStatePacket()
-            {
-                SteamID = ClientSteamID,
-                PositionX = stateData.Position.x,
-                PositionY = stateData.Position.y,
-                PositionZ = stateData.Position.z,
-                EulerX = stateData.Rotation.x,
-                EulerY = stateData.Rotation.y,
-                EulerZ = stateData.Rotation.z,
-                Mode = stateData.Mode
-            };
-
-            var outgoingMessage = client.CreateMessage();
-            PacketUtility.Pack(playerState, outgoingMessage);
-            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
-        }
-
-        /// <summary>
         /// Sends a selection request to the server for a block with the specified UID.
         /// </summary>
         /// <param name="uid">The unique identifier (UID) of the block to select.</param>
@@ -986,6 +882,67 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
+        #endregion
+
+        #region Permission System 
+
+        /// <summary>
+        /// Handles the server rules response by assigning the received permissions to the local player or by blocking players from joining if they are banned.
+        /// </summary>
+        /// <param name="serverRules">The <see cref="ServerRulesResponsePacket "/> containing the local players permission data and server rule data.</param>
+        public void HandleServerRules(ServerRulesResponsePacket serverRules)
+        {
+            PermissionProfile perms = new PermissionProfile(serverRules);
+            Plugin.Instance.perms.SetLocalProfile(perms);
+            
+            //We are currently in the main menu, requesting permissions before joining the server.
+            if (Plugin.Instance.game.gameState == GameManager.GameState.WaitingOnServerRulesInMainMenu)
+            {
+                //If the player is banned, go back to main menu state and attempt disconnecting.
+                if (Plugin.Instance.perms.IsBanned())
+                {
+                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
+                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
+
+                    AttemptDisconnect();                    
+                }
+                //The player is allowed to join the server, go ahead an load the editor.
+                else
+                {
+                    // Transition to the next state and load into the editor
+                    Plugin.Instance.game.gameState = GameManager.GameState.EnteringTeamXFromMainMenu;
+                    Plugin.Instance.game.LoadIntoEditorX();
+                }
+            }
+            //We are in a server and received an updated permission package.
+            else if(Plugin.Instance.game.gameState == GameManager.GameState.TeamXEditor || Plugin.Instance.game.gameState == GameManager.GameState.TeamXGame)
+            {
+                //Did we just get banned?
+                if (Plugin.Instance.perms.IsBanned())
+                {
+                    //Main menu is the default state for non TeamX players.
+                    Plugin.Instance.game.gameState = GameManager.GameState.MainMenu;
+                    Plugin.Instance.client.ConnectionStatus = ConnectionStatus.Disconnecting;
+                    AttemptDisconnect();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the permission table received from the server (send to admins when requested from the permission panel).
+        /// </summary>
+        /// <param name="tableResponse">The <see cref="PermissionTableResponse"/> containing the permission entries.</param>
+        public void HandlePermissionTableResponse(PermissionTableResponse tableResponse)
+        {
+            if (InterfaceManager.permissionPanel != null)
+            {
+                InterfaceManager.permissionPanel.ImportEntries(tableResponse.permissionTable);
+            }
+        }
+
+        /// <summary>
+        /// Sends a permission table request to the server, which returns a PermissionTableResponse if the caller is high enough permission.
+        /// </summary>
         public void SendPermissionTableRequest()
         {
             PermissionTableRequest permissionTableRequest = new PermissionTableRequest()
@@ -998,6 +955,10 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
+        /// <summary>
+        /// Send the updated permission table from the permission panel to the server.
+        /// </summary>
+        /// <param name="entries"></param>
         public void SendPermissionTableSubmit(List<TeamXPermissionPanelEntry> entries)
         {
             PermissionTableSubmit permissionTableSubmit = new PermissionTableSubmit()
@@ -1006,24 +967,24 @@ namespace TeamXClient
             };
 
             permissionTableSubmit.permissionTable = new List<(ulong, string, string)>();
-            
-            foreach(TeamXPermissionPanelEntry e in entries)
+
+            foreach (TeamXPermissionPanelEntry e in entries)
             {
                 string perm = "default";
 
-                if(e.banned)
+                if (e.banned)
                 {
                     perm = "banned";
                 }
-                else if(e.guest)
+                else if (e.guest)
                 {
                     perm = "guest";
                 }
-                else if(e.trusted)
+                else if (e.trusted)
                 {
                     perm = "trusted";
                 }
-                else if(e.admin)
+                else if (e.admin)
                 {
                     perm = "admin";
                 }
@@ -1036,16 +997,19 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
 
-        public void SendSaveCurrentState()
-        {
-            SaveCurrentStatePacket saveCurrentState = new SaveCurrentStatePacket()
-            {
-                SteamID = ClientSteamID
-            };
+        #endregion
 
-            var outgoingMessage = client.CreateMessage();
-            PacketUtility.Pack(saveCurrentState, outgoingMessage);
-            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        #region Save Configuration
+        /// <summary>
+        /// Handles the save configuration information received from the server (send to admins when requested from the save configuration panel).
+        /// </summary>
+        /// <param name="saveConfigurationResponse">The <see cref="SaveConfigurationResponsePacket"/> containing the save configuration data.</param>
+        public void HandleSaveConfigurationResponse(SaveConfigurationResponsePacket saveConfigurationResponse)
+        {
+            if (InterfaceManager.saveConfigurationPanel != null)
+            {
+                InterfaceManager.saveConfigurationPanel.UpdateValues(saveConfigurationResponse.AutoSaveInterval, saveConfigurationResponse.BackupCount, saveConfigurationResponse.KeepBackupWithNoEditors, saveConfigurationResponse.LevelName, saveConfigurationResponse.LoadBackupOnStart);
+            }
         }
 
         public void SendSaveConfigurationRequestPacket()
@@ -1076,6 +1040,20 @@ namespace TeamXClient
             PacketUtility.Pack(saveConfigurationSubmit, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
+        #endregion
+
+        #region Level Management
+        /// <summary>
+        /// Handles the level information received from the server (send to admins when requested from the level management panel).
+        /// </summary>
+        /// <param name="levelDirectoryResponse">The <see cref="LevelDirectoryResponsePacket"/> containing the local paths of all teamkist projects on the server.</param>
+        public void HandleLevelDirectoryResponse(LevelDirectoryResponsePacket levelDirectoryResponse)
+        {
+            if (InterfaceManager.levelManagerPanel != null)
+            {
+                InterfaceManager.levelManagerPanel.ImportDirectories(levelDirectoryResponse.LocalPaths);
+            }
+        }
 
         public void SendLoadLevelRequestPacket(string localPath)
         {
@@ -1101,5 +1079,18 @@ namespace TeamXClient
             PacketUtility.Pack(levelDirectoryRequest, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
+
+        public void SendSaveCurrentState()
+        {
+            SaveCurrentStatePacket saveCurrentState = new SaveCurrentStatePacket()
+            {
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(saveCurrentState, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+        #endregion
     }
 }

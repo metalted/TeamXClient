@@ -73,6 +73,11 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Get the name of a player.
+        /// </summary>
+        /// <param name="steamID">The steamID of the player to get the name from.</param>
+        /// <returns>The name of the player or playernotfound if not available.</returns>
         public string GetPlayerName(ulong steamID)
         {
             if(players.ContainsKey(steamID))
@@ -83,6 +88,10 @@ namespace TeamXClient
             return "<playernotfound>";
         }
 
+        /// <summary>
+        /// Get the names of all connected players.
+        /// </summary>
+        /// <returns>An array with names.</returns>
         public string[] GetAllPlayerNames()
         {
             return players.Values.Select(player => player.name).ToArray();
@@ -144,6 +153,9 @@ namespace TeamXClient
             }
         }
 
+        /// <summary>
+        /// Clear all multiplayer data and objects.
+        /// </summary>
         public void ClearAllData()
         {
             List<ulong> ids = players.Keys.ToList();
@@ -151,6 +163,9 @@ namespace TeamXClient
             {
                 RemovePlayer(id);
             }
+
+            players.Clear();
+            playerCharacters.Clear();
         }
     }
 }
