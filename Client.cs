@@ -69,6 +69,7 @@ namespace TeamXClient
             }
 
             Plugin.Instance.Log("Connecting...", LogType.Message);
+            PlayerManager.Instance.messenger.Log("Attempting connection...", 2f);
 
             try
             {
@@ -198,12 +199,14 @@ namespace TeamXClient
                 case NetConnectionStatus.Connected:
                     ConnectionStatus = ConnectionStatus.Connected;
                     Plugin.Instance.Log("ConnectionStatus: Connected!", LogType.Message);
+                    PlayerManager.Instance.messenger.Log("Connected", 2f);
                     HandleHandshakeRequest();
                     break;
 
                 case NetConnectionStatus.Disconnected:
                     ConnectionStatus = ConnectionStatus.Disconnected;
                     Plugin.Instance.Log("ConnectionStatus: Disconnected!", LogType.Message);
+                    PlayerManager.Instance.messenger.Log("Disconnected", 2f);
                     break;
             }
         }
@@ -344,6 +347,15 @@ namespace TeamXClient
                 case LevelDirectoryResponsePacket levelDirectoryResponse:
                     HandleLevelDirectoryResponse(levelDirectoryResponse);
                     break;
+                case ChatMessagePacket chatMessagePacket:
+                    HandleChatMessage(chatMessagePacket);
+                    break;
+                case HornPacket hornPacket:
+                    HandleHorn(hornPacket);
+                    break;
+                case CustomMessagePacket customMessagePacket:
+                    HandleCustomMessage(customMessagePacket);
+                    break;
 
                 default:
                     // If no case matches, throw an exception
@@ -461,7 +473,7 @@ namespace TeamXClient
                 color_leftArm = playerJoinPacket.Color_leftArm,
                 color_leftLeg = playerJoinPacket.Color_leftLeg,
                 color_rightArm = playerJoinPacket.Color_rightArm,
-                color_rightLeg = playerJoinPacket.Color_leftLeg,
+                color_rightLeg = playerJoinPacket.Color_rightLeg,
                 frontWheels = playerJoinPacket.FrontWheels,
                 glasses = playerJoinPacket.Glasses,
                 hat = playerJoinPacket.Hat,
@@ -470,7 +482,8 @@ namespace TeamXClient
                 paraglider = playerJoinPacket.Paraglider,
                 rearWheels = playerJoinPacket.RearWheels,
                 state = 0,
-                steamID = playerJoinPacket.SteamID
+                steamID = playerJoinPacket.SteamID,
+                zeepkist = playerJoinPacket.Zeepkist
             };
 
             Plugin.Instance.Log($"PlayerJoined, Player Data: {playerData.ToDebugString()}", LogType.Debug);
@@ -531,6 +544,99 @@ namespace TeamXClient
 
             var outgoingMessage = client.CreateMessage();
             PacketUtility.Pack(playerState, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        /// <summary>
+        /// Handle a chat message send from the server.
+        /// </summary>
+        /// <param name="chatMessagePacket">The <see cref="ChatMessagePacket"/> containing the chat message.</param>
+        public void HandleChatMessage(ChatMessagePacket chatMessagePacket)
+        {
+            //...
+        }
+
+        /// <summary>
+        /// Send a chat message to all other connected players.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        public void SendChatMessage(string message)
+        {
+            if(string.IsNullOrEmpty(message))
+            {
+                return;
+            }
+
+            PlayerData playerData = Utils.GetLocalPlayerData();
+
+            ChatMessagePacket chatMessage = new ChatMessagePacket()
+            {
+                Message = message,
+                SteamID = ClientSteamID,
+                Username = playerData.name,
+                Color = playerData.chatColor
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(chatMessage, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        /// <summary>
+        /// Handle the message of somebody honking.
+        /// </summary>
+        /// <param name="hornPacket">The <see cref="HornPacket"/> containing the honk honk data. </param>
+        public void HandleHorn(HornPacket hornPacket)
+        {
+            //...
+        }
+
+        /// <summary>
+        /// Send a honk honk to all other players connected.
+        /// </summary>
+        public void SendHorn()
+        {
+            PlayerData playerData = Utils.GetLocalPlayerData();
+
+            HornPacket hornPacket = new HornPacket()
+            {
+                SteamID = ClientSteamID,
+                HornID = playerData.horn
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(hornPacket, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        /// <summary>
+        /// Handle a custom message with whatever payload.
+        /// </summary>
+        /// <param name="customMessagePacket">The <see cref="CustomMessagePacket"/> containing the custom message data. </param>
+        public void HandleCustomMessage(CustomMessagePacket customMessagePacket)
+        {
+            //...
+        }
+
+        /// <summary>
+        /// Send a custom message to everybody connected to the server
+        /// </summary>
+        /// <param name="payload">The payload to send.</param>
+        public void SendCustomMessage(string payload)
+        {
+            if (string.IsNullOrEmpty(payload))
+            {
+                return;
+            }
+
+            CustomMessagePacket customMessagePacket = new CustomMessagePacket()
+            {
+                SteamID = ClientSteamID,
+                Payload = payload
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(customMessagePacket, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
         }
 

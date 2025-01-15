@@ -19,6 +19,9 @@ namespace TeamXClient
         public static TeamXSaveConfigurationPanel saveConfigurationPanel;
         public static TeamXLevelManagerPanel levelManagerPanel;
 
+        //The overall state of all the panels.
+        public static TeamXPanelState overallPanelState = TeamXPanelState.Closed;
+
         //Predefined colors for the UI.
         public static Color lightestGreen = new Color(0.336f, 1f, 0.766f);
         public static Color lightGreen = new Color(0f, 1f, 0.656f, 1f);
@@ -60,6 +63,8 @@ namespace TeamXClient
             Plugin.Instance.editor.Central.tool.RecolorButtons();
             Plugin.Instance.editor.Central.tool.currentTool = 3;
             Plugin.Instance.editor.Central.tool.inspectorTitle.text = "";
+
+            overallPanelState = TeamXPanelState.Open;
         }
 
         /// <summary>
@@ -70,6 +75,8 @@ namespace TeamXClient
             Plugin.Instance.editor.Central.tool.EnableEditTool();
             Plugin.Instance.editor.Central.tool.RecolorButtons();
             Plugin.Instance.editor.Central.cam.OverrideOutsideGameView(false);
+
+            overallPanelState = TeamXPanelState.Closed;
         }
 
         /// <summary>

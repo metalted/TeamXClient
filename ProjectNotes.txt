@@ -1,12 +1,14 @@
 ﻿TODO List
 ==================================================================================================================================================
-- Add a button in the admin panel that will save the current level directly, so you dont have to wait for the auto save.
-- Add network message for chat.
-- Add more screen messages about game states and actions.
+- Add a button in the admin panel that will save the current level directly, so you dont have to wait for the auto save. (added button and message)
+- Add network message for chat. (added chat, horn and custom messages to TeamXNetwork)
+- Add more screen messages about game states and actions. (added some might need more)
 
 BUGS
 ==================================================================================================================================================
-- Fix the cosmetics.
+- Fix the cosmetics. (Found missing property for zeepkist, leftLeg was assigned rightLeg)
+- Fix the camera positioning. (Should be fixed, now moving the actual camera body.)
+- Fix the skybox change on panel open, which is the same as BPX (done needs test)
 
 IDEAS
 ==================================================================================================================================================

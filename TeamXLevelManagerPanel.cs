@@ -90,11 +90,15 @@ namespace TeamXClient
             elements["ScrollView"].SetGridLayoutColumns(2, 0.1f);
 
             CreateTextButton("Apply", "Send to Server");
-            elements["Apply"].SetRectAnchors(0.825f, 0.025f, 0.975f, 0.125f);
+            elements["Apply"].SetRectAnchors(0.7f, 0.025f, 0.975f, 0.125f);
             elements["Apply"].BindButton(() => OnApplyButton());
 
+            CreateTextButton("SaveNow", "Save Current Map");
+            elements["SaveNow"].SetRectAnchors(0.025f, 0.025f, 0.3f, 0.125f);
+            elements["SaveNow"].BindButton(() => OnSaveNowButton());
+
             CreateLabel("Selected", "");
-            elements["Selected"].SetRectAnchors(0.025f, 0.025f, 0.5f, 0.125f);
+            elements["Selected"].SetRectAnchors(0.325f, 0.025f, 0.675f, 0.125f);
 
             CreateTextButton("BackButton", "< Levels");
             elements["BackButton"].SetRectAnchors(0.5f, 0.88f, 0.6f, 0.975f);
@@ -134,6 +138,12 @@ namespace TeamXClient
 
             Plugin.Instance.client.SendLoadLevelRequestPacket(selectedLevelPath);
             Close();
+        }
+
+        private void OnSaveNowButton()
+        {
+            PlayerManager.Instance.messenger.Log("Send save request...", 2f);
+            Plugin.Instance.client.SendSaveCurrentState();
         }
     }
 }     

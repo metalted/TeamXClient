@@ -22,7 +22,7 @@ namespace TeamXClient
             elements["Reload"].BindButton(() => OnReloadButton());
 
             CreateTextButton("Apply", "Send to Server");
-            elements["Apply"].SetRectAnchors(0.825f, 0.025f, 0.975f, 0.125f);
+            elements["Apply"].SetRectAnchors(0.7f, 0.025f, 0.975f, 0.125f);
             elements["Apply"].BindButton(() => OnApplyButton());
 
             elements["ScrollView"].Enable();

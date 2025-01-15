@@ -125,7 +125,7 @@ namespace TeamXClient
                     if (multiplayer.lastKnownEditorLocation.SteamID != 0)
                     {
                         //Data has been assigned previously as the SteamID has a value.
-                        central.cam.cameraTransform.position = multiplayer.lastKnownEditorLocation.Position;
+                        central.cam.transform.position = multiplayer.lastKnownEditorLocation.Position;
                     }
 
                     if (manager.weLoadedLevelEditorFromMainMenu)

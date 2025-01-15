@@ -298,4 +298,38 @@ namespace TeamXClient
             }
         }
     }
+
+    /// <summary>
+    /// Harmony patch called whenever we press shift P. Required to not change skybox when pressing P in a panel.
+    /// </summary>
+    [HarmonyPatch(typeof(SkyboxManager), "PreviousCurrent")]
+    public class SkyboxManager_PreviousCurrent
+    {
+        public static bool Prefix(SkyboxManager __instance)
+        {
+            if (InterfaceManager.overallPanelState == TeamXPanelState.Open)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Harmony patch called whenever we press P. Required to not change skybox when pressing P in a panel.
+    /// </summary>
+    [HarmonyPatch(typeof(SkyboxManager), "AdvanceCurrent")]
+    public class SkyboxManager_AdvanceCurrent
+    {
+        public static bool Prefix(SkyboxManager __instance)
+        {
+            if (InterfaceManager.overallPanelState == TeamXPanelState.Open)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
 }

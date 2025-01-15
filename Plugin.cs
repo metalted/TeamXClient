@@ -13,7 +13,7 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.1.4";
+        public const string pluginVersion = "1.2";
 
         public static Plugin Instance;
         

@@ -59,6 +59,7 @@ namespace TeamXClient
         public int color_leftLeg;
         public int color_rightLeg;
         public int color;
+        public string chatColor;
 
         /// <summary>
         /// Converts player cosmetic data into a <see cref="CosmeticsV16"/> object.
@@ -173,6 +174,7 @@ namespace TeamXClient
                 playerData.color_leftLeg = cosmeticIDs.color_leftLeg;
                 playerData.color_rightLeg = cosmeticIDs.color_rightLeg;
                 playerData.color = cosmeticIDs.color;
+                playerData.chatColor = "#ffffff";
             }
             catch (Exception e)
             {
@@ -194,6 +196,7 @@ namespace TeamXClient
                 playerData.color_leftLeg = 1000;
                 playerData.color_rightLeg = 1000;
                 playerData.color = 1000;
+                playerData.chatColor = "#ffffff";
             }
 
             return playerData;
@@ -325,7 +328,16 @@ namespace TeamXClient
                 }
             }
 
-            return projectFiles;
+            // Sort the List<string> in descending order for each project
+            foreach (var key in projectFiles.Keys.ToList()) // ToList prevents modification during iteration
+            {
+                projectFiles[key].Sort((x, y) => string.Compare(y, x, StringComparison.Ordinal));
+            }
+
+            // Sort the dictionary keys alphabetically and return a new sorted dictionary
+            return projectFiles
+                .OrderBy(entry => entry.Key, StringComparer.Ordinal)
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
         }
     }
 }
