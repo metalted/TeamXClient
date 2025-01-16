@@ -124,12 +124,12 @@ namespace TeamXClient
             skybox = 0;
             blocks = new List<string>();
         }
-    }   
+    }
 
     public static class Utils
     {
-        public static Shpleeble shpleeblePrefab = null;      
-        
+        public static Shpleeble shpleeblePrefab = null;
+
         public static bool IsBlockSelected(string UID)
         {
             return Plugin.Instance.editor.Central.selection.list.Any(b => b.UID == UID);
@@ -150,7 +150,52 @@ namespace TeamXClient
             return block;
         }
 
-         public static PlayerData GetLocalPlayerData()
+        public static string GetOnlinePlayerHexColor()
+        {
+            float h = PlayerManager.Instance.instellingen.GlobalSettings.online_name_color_H;
+            float s = PlayerManager.Instance.instellingen.GlobalSettings.online_name_color_S;
+            float v = PlayerManager.Instance.instellingen.GlobalSettings.online_name_color_V;
+
+            //Convert the hsv to hex 
+            return HsvToHex(h, s, v);
+        }
+
+        public static string HsvToHex(float h, float s, float v)
+        {
+            // Ensure HSV values are within expected ranges
+            h = Math.Clamp(h, 0f, 360f);
+            s = Math.Clamp(s, 0f, 1f);
+            v = Math.Clamp(v, 0f, 1f);
+
+            // Convert HSV to RGB
+            int hi = (int)(h / 60) % 6;
+            float f = (h / 60) - hi;
+            float p = v * (1 - s);
+            float q = v * (1 - f * s);
+            float t = v * (1 - (1 - f) * s);
+
+            float r = 0, g = 0, b = 0;
+
+            switch (hi)
+            {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+
+            // Convert RGB floats to integers (0-255)
+            int rInt = (int)(r * 255);
+            int gInt = (int)(g * 255);
+            int bInt = (int)(b * 255);
+
+            // Convert to hexadecimal string
+            return $"#{rInt:X2}{gInt:X2}{bInt:X2}";
+        }
+
+        public static PlayerData GetLocalPlayerData()
          {
             PlayerData playerData = new PlayerData();
             playerData.state = 255;
@@ -174,7 +219,7 @@ namespace TeamXClient
                 playerData.color_leftLeg = cosmeticIDs.color_leftLeg;
                 playerData.color_rightLeg = cosmeticIDs.color_rightLeg;
                 playerData.color = cosmeticIDs.color;
-                playerData.chatColor = "#ffffff";
+                playerData.chatColor = Utils.GetOnlinePlayerHexColor();
             }
             catch (Exception e)
             {

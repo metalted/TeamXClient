@@ -553,7 +553,7 @@ namespace TeamXClient
         /// <param name="chatMessagePacket">The <see cref="ChatMessagePacket"/> containing the chat message.</param>
         public void HandleChatMessage(ChatMessagePacket chatMessagePacket)
         {
-            //...
+            InterfaceManager.ReceivedChat(chatMessagePacket);
         }
 
         /// <summary>
@@ -577,6 +577,8 @@ namespace TeamXClient
                 Color = playerData.chatColor
             };
 
+            InterfaceManager.ReceivedChat(chatMessage);
+
             var outgoingMessage = client.CreateMessage();
             PacketUtility.Pack(chatMessage, outgoingMessage);
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
@@ -588,7 +590,19 @@ namespace TeamXClient
         /// <param name="hornPacket">The <see cref="HornPacket"/> containing the honk honk data. </param>
         public void HandleHorn(HornPacket hornPacket)
         {
-            //...
+            //Get the horn of this player
+            int playerHornID = Plugin.Instance.multiplayer.GetPlayerHorn(hornPacket.SteamID);
+
+            if(playerHornID != -1)
+            {
+                Transform playerTransform = Plugin.Instance.multiplayer.GetPlayerTransform(hornPacket.SteamID);
+
+                if (playerTransform != null)
+                {
+                    Plugin.Instance.isRemoteHorn = true;
+                    PlayerManager.Instance.hornsIndex.PlayHornPlayback((FMOD_HornsIndex.HornType)playerHornID, playerTransform, 2);
+                }
+            }
         }
 
         /// <summary>

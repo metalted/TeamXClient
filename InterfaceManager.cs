@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using TeamXNetwork;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace TeamXClient
 {   
+    public struct ChatLine
+    {
+        public string userName;
+        public string userColor;
+        public string message;
+    }
+
     /// <summary>
     /// This class is responsible for anything UI related, be it panels, playerlist or messages.
     /// </summary>
@@ -31,6 +40,10 @@ namespace TeamXClient
         public static Color grey = new Color(0.3f, 0.3f, 0.3f, 1f);
         public static Color darkgrey = new Color(0.2f, 0.2f, 0.2f, 1f);
 
+        public static TextMeshProUGUI chatText;
+        public static string chatInputText = "";
+        public static List<ChatLine> chatHistory = new List<ChatLine>();
+
         /// <summary>
         /// Called when we enter the main menu to create the teamkist editor button.
         /// </summary>
@@ -51,6 +64,88 @@ namespace TeamXClient
             {
                 InitializePanels();
                 CreateToolbarButton();
+            }
+
+            SetupChatUI();
+        }
+
+        /// <summary>
+        /// Will copy the Tooltips TextMesh to be used for the chat log.
+        /// </summary>
+        public static void SetupChatUI()
+        {
+            //Find the LEV_Tooltips
+            LEV_Tooltips tooltips = GameObject.FindObjectOfType<LEV_Tooltips>();
+
+            //Add the tooltips to the configurator
+            ZeepSDK.UI.UIApi.AddToConfigurator(tooltips.GetComponent<RectTransform>());
+
+            if(tooltips == null)
+            {
+                Plugin.Instance.Log("Tooltips UI not found.", LogType.Error);
+            }
+
+            //Copy the tooltips
+            chatText = GameObject.Instantiate(tooltips.gameObject, tooltips.transform.parent).GetComponent<TextMeshProUGUI>();
+            chatText.gameObject.name = "ChatWindow";
+            ZeepSDK.UI.UIApi.AddToConfigurator(chatText.GetComponent<RectTransform>());
+
+            //Get the index of the tooltip and place the chat there
+            int tooltipIndex = tooltips.transform.GetSiblingIndex();
+            chatText.transform.SetSiblingIndex(tooltipIndex);
+            chatText.enableWordWrapping = true;
+
+            //Destroy the unwanted components
+            GameObject.Destroy(chatText.GetComponent<LEV_Tooltips>());
+
+            if(Plugin.Instance.cfg_chatEnabled.Value)
+            {
+                //Make sure its active
+                chatText.gameObject.SetActive(true);
+            }
+            else
+            {
+                chatText.gameObject.SetActive(false);
+            }
+
+            RefreshChatBox();
+        }
+
+        public static void ReceivedChat(ChatMessagePacket chatMessage)
+        {
+            //Create the chatline
+            ChatLine line = new ChatLine()
+            {
+                message = chatMessage.Message,
+                userName = chatMessage.Username,
+                userColor = chatMessage.Color
+            };
+
+            //Add the chat line to the history
+            chatHistory.Add(line);
+
+            if(chatHistory.Count > 5)
+            {
+                chatHistory.RemoveAt(0);
+            }
+
+            RefreshChatBox();
+        }
+
+        public static void RefreshChatBox()
+        {
+            if(chatText != null)
+            {
+                List<string> chatLines = new List<string>();
+
+                foreach (ChatLine c in chatHistory)
+                {
+                    chatLines.Add($"<color={c.userColor}>{c.userName}</color>: <color=#ffffff>{c.message}</color>");
+                }
+
+                string fullChat = string.Join("\n", chatLines.ToArray());
+
+                chatText.text = fullChat;
             }
         }
 
@@ -304,6 +399,34 @@ namespace TeamXClient
                 float yPosition = startHeight + row * rowSpacing; // Row offset
 
                 GUI.Box(new Rect(xPosition, yPosition, boxWidth, boxHeight), connectedPlayerNames[i]);
+            }
+        }
+
+        public static void ShowChatInput()
+        {
+            bool enterSend = false;
+            Event e = Event.current;
+            if(e.isKey)
+            {
+                string name = e.keyCode.ToString().ToLower();
+                if(name.Contains("return"))
+                {
+                    enterSend = true;
+                }
+            }
+
+            GUI.SetNextControlName("ChatInputField");
+            chatInputText = GUI.TextField(new Rect(0, Screen.height - 30f, Screen.width * 0.25f, 30f), chatInputText);
+
+            if(Plugin.Instance.chatInputNeedsFocus)
+            {
+                GUI.FocusControl("ChatInputField");
+                Plugin.Instance.chatInputNeedsFocus = false;
+            }   
+            
+            if(enterSend)
+            {
+                Plugin.Instance.ProcessChatInput();
             }
         }
     }    

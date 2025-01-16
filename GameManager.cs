@@ -67,6 +67,9 @@ namespace TeamXClient
 
             //Clear all player data, like connected players and instantiated player models.
             Plugin.Instance.multiplayer.ClearAllData();
+
+            //Clear the chat history
+            InterfaceManager.chatHistory.Clear();
         }
 
         /// <summary>

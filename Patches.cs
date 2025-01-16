@@ -332,4 +332,27 @@ namespace TeamXClient
             return true;
         }
     }
+
+
+    /// <summary>
+    /// Honk honk
+    /// </summary>
+    [HarmonyPatch(typeof(FMOD_HornsIndex), "PlayHornPlayback")]
+    public class FMODHornPlayback
+    {
+        public static void Prefix()
+        {
+            if (Plugin.Instance.IsTeamXEditor())
+            {
+                if (Plugin.Instance.isRemoteHorn)
+                {
+                    Plugin.Instance.isRemoteHorn = false;
+                }
+                else
+                {
+                    Plugin.Instance.client.SendHorn();
+                }
+            }
+        }
+    }
 }

@@ -150,6 +150,12 @@ namespace TeamXClient
         /// <param name="paintID">The ID of the material to apply to the floor.</param>
         public void UpdateFloor(int paintID)
         {
+            //Fix because function is called before painter is done initializing.
+            if(editor.Central.painter.MaterialManager == null)
+            {
+                editor.Central.painter.MaterialManager = GameObject.Find("Material Manager").GetComponent<MaterialManager>();
+            }
+
             editor.Central.painter.SetLoadGroundMaterial(paintID);
         }
 

@@ -88,6 +88,26 @@ namespace TeamXClient
             return "<playernotfound>";
         }
 
+        public int GetPlayerHorn(ulong steamID)
+        {
+            if (players.ContainsKey(steamID))
+            {
+                return players[steamID].horn;
+            }
+
+            return -1;
+        }
+
+        public Transform GetPlayerTransform(ulong steamID)
+        {
+            if (playerCharacters.ContainsKey(steamID))
+            {
+                return playerCharacters[steamID].transform;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Get the names of all connected players.
         /// </summary>
