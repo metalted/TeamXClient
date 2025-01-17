@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using ZeepkistNetworking;
 
 namespace TeamXClient
 {
@@ -43,23 +44,23 @@ namespace TeamXClient
     /// </summary>
     public struct PlayerData
     {
-        public ulong steamID;
-        public string name;
-        public byte state;
-        public int zeepkist;
-        public int frontWheels;
-        public int rearWheels;
-        public int paraglider;
-        public int horn;
-        public int hat;
-        public int glasses;
+        public string chatColor;
+        public int color;
         public int color_body;
         public int color_leftArm;
-        public int color_rightArm;
         public int color_leftLeg;
+        public int color_rightArm;
         public int color_rightLeg;
-        public int color;
-        public string chatColor;
+        public int frontWheels;
+        public int glasses;
+        public int hat;
+        public int horn;
+        public string name;
+        public int paraglider;
+        public int rearWheels;
+        public byte state;
+        public ulong steamID;
+        public int zeepkist;
 
         /// <summary>
         /// Converts player cosmetic data into a <see cref="CosmeticsV16"/> object.
@@ -68,29 +69,41 @@ namespace TeamXClient
         public CosmeticsV16 ToCosmeticsV16()
         {
             CosmeticsV16 cosmetics = new CosmeticsV16();
-            ZeepkistNetworking.CosmeticIDs cosmeticIDs = new ZeepkistNetworking.CosmeticIDs()
-            {
-                zeepkist = zeepkist,
-                frontWheels = frontWheels,
-                rearWheels = rearWheels,
-                paraglider = paraglider,
-                horn = horn,
-                hat = hat,
-                glasses = glasses,
-                color_body = color_body,
-                color_leftArm = color_leftArm,
-                color_rightArm = color_rightArm,
-                color_leftLeg = color_leftLeg,
-                color_rightLeg = color_rightLeg,
-                color = color
-            };
-            cosmetics.IDsToCosmetics(cosmeticIDs);
+            cosmetics.zeepkist = (Object_Soapbox)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.zeepkist, zeepkist, false);
+            cosmetics.frontwheels = (Object_Wheel)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.wheel, frontWheels, false);
+            cosmetics.rearwheels = (Object_Wheel)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.wheel, rearWheels, false);
+            cosmetics.paraglider = (Object_Paraglider)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.paraglider, paraglider, false);
+            cosmetics.hat = (HatValues)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.hat, hat, false);
+            cosmetics.glasses = (HatValues)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.glasses, glasses, false);
+            cosmetics.color_body = (CosmeticColor)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.skin, color_body, false);
+            cosmetics.color_leftArm = (CosmeticColor)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.skin, color_leftArm, false);
+            cosmetics.color_rightArm = (CosmeticColor)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.skin, color_rightArm, false);
+            cosmetics.color_leftLeg = (CosmeticColor)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.skin, color_leftLeg, false);
+            cosmetics.color_rightLeg = (CosmeticColor)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.skin, color_rightLeg, false);
+            cosmetics.horn = (Object_Horn)PlayerManager.Instance.objectsList.wardrobe.GetCosmetic(CosmeticItemType.horn, horn, false);
             return cosmetics;
         }
 
         public string ToDebugString()
         {
-            return $"{zeepkist},{frontWheels},{rearWheels},{paraglider},{horn},{hat},{glasses},{color_body},{color_leftArm},{color_rightArm},{color_leftLeg},{color_rightLeg},{color}";
+            return $"" +
+                $"Name: {name}\n" +
+                $"SteamID: {steamID}\n" +
+                $"ChatColor: {chatColor}\n" +
+                $"Color: {color}\n" +
+                $"Color Body: {color_body}\n" +
+                $"Color Left Arm: {color_leftArm}\n" +
+                $"Color Left Leg: {color_leftLeg}\n" +
+                $"Color Right Arm: {color_rightArm}\n" +
+                $"Color Right Leg: {color_rightLeg}\n" +
+                $"Front Wheels: {frontWheels}\n" +
+                $"Glasses: {glasses}\n" +
+                $"Hat: {hat}\n" +
+                $"Horn: {horn}\n" +
+                $"Paraglider: {paraglider}\n" +
+                $"Rear Wheels: {rearWheels}\n" +
+                $"State: {state}\n" +
+                $"Zeepkist: {zeepkist}";
         }
     }
 
@@ -197,53 +210,30 @@ namespace TeamXClient
 
         public static PlayerData GetLocalPlayerData()
          {
-            PlayerData playerData = new PlayerData();
-            playerData.state = 255;
+            ZeepkistNetworking.CosmeticIDs cosmeticIDs = ProgressionManager.Instance.GetAdventureCosmetics();
 
-            try
+            PlayerData playerData = new PlayerData()
             {
-                ZeepkistNetworking.CosmeticIDs cosmeticIDs = ProgressionManager.Instance.GetAdventureCosmetics();
+                chatColor = GetOnlinePlayerHexColor(),
+                color = cosmeticIDs.color,
+                color_body = cosmeticIDs.color_body,
+                color_leftArm = cosmeticIDs.color_leftArm,
+                color_leftLeg = cosmeticIDs.color_leftLeg,
+                color_rightArm = cosmeticIDs.color_rightArm,
+                color_rightLeg = cosmeticIDs.color_rightLeg,
+                frontWheels = cosmeticIDs.frontWheels,
+                glasses = cosmeticIDs.glasses,
+                hat = cosmeticIDs.hat,
+                horn = cosmeticIDs.horn,
+                name = PlayerManager.Instance.steamAchiever.GetPlayerName(false),
+                paraglider = cosmeticIDs.paraglider,
+                rearWheels = cosmeticIDs.rearWheels,
+                state = 0,
+                steamID = Plugin.Instance.client.ClientSteamID,
+                zeepkist = cosmeticIDs.zeepkist
+            };
 
-                playerData.name = PlayerManager.Instance.steamAchiever.GetPlayerName(false);
-                playerData.steamID = Plugin.Instance.client.ClientSteamID;
-                playerData.zeepkist = cosmeticIDs.zeepkist;
-                playerData.frontWheels = cosmeticIDs.frontWheels;
-                playerData.rearWheels = cosmeticIDs.rearWheels;
-                playerData.paraglider = cosmeticIDs.paraglider;
-                playerData.horn = cosmeticIDs.horn;
-                playerData.hat = cosmeticIDs.hat;
-                playerData.glasses = cosmeticIDs.glasses;
-                playerData.color_body = cosmeticIDs.color_body;
-                playerData.color_leftArm = cosmeticIDs.color_leftArm;
-                playerData.color_rightArm = cosmeticIDs.color_rightArm;
-                playerData.color_leftLeg = cosmeticIDs.color_leftLeg;
-                playerData.color_rightLeg = cosmeticIDs.color_rightLeg;
-                playerData.color = cosmeticIDs.color;
-                playerData.chatColor = Utils.GetOnlinePlayerHexColor();
-            }
-            catch (Exception e)
-            {
-                playerData.name = "Sphleeble";
-                playerData.hat = 23000;
-                playerData.color = 1000;
-                playerData.zeepkist = 1000;
-                playerData.zeepkist = 1000;
-                playerData.frontWheels = 1000;
-                playerData.rearWheels = 1000;
-                playerData.paraglider = 1000;
-                playerData.horn = 1000;
-                playerData.hat = 23000;
-                playerData.glasses = 1000;
-                playerData.color_body = 1000;
-                playerData.color_leftArm = 1000;
-                playerData.color_rightArm = 1000;
-                playerData.color_leftLeg = 1000;
-                playerData.color_rightLeg = 1000;
-                playerData.color = 1000;
-                playerData.chatColor = "#ffffff";
-            }
-
-            return playerData;
+            return playerData;          
         }
 
         public static Shpleeble CreateShpleeble(PlayerData playerData)

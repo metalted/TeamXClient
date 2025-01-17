@@ -37,6 +37,8 @@ namespace TeamXClient
             SteamID = 0
         };
 
+        public PlayerData cachedLocalPlayerData = new PlayerData();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MultiplayerManager"/> class.
         /// </summary>

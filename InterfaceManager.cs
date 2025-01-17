@@ -432,10 +432,8 @@ namespace TeamXClient
         /// </summary>
         public static void ShowPlayerList()
         {
-            Debug.LogWarning("Showing");
             if(playerListText == null)
             {
-                Debug.LogWarning("Player list text is null wtf");
                 return;
             }
 

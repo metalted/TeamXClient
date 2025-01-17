@@ -417,28 +417,29 @@ namespace TeamXClient
         /// <param name="accessGranted">The <see cref="AccessGrantedPacket"/> received from the server.</param>
         public void HandleAccessGranted(AccessGrantedPacket accessGranted)
         {
-            PlayerData localPlayer = Utils.GetLocalPlayerData();
+            Plugin.Instance.multiplayer.cachedLocalPlayerData = Utils.GetLocalPlayerData();
+            PlayerData lp = Plugin.Instance.multiplayer.cachedLocalPlayerData;
 
-            Plugin.Instance.Log($"Access Granted, Local Player Data: {localPlayer.ToDebugString()}", LogType.Debug);
+            Plugin.Instance.Log($"Access Granted, Local Player Data: {lp.ToDebugString()}", LogType.Debug);
 
             // Create and send player join packet
             PlayerJoinPacket playerJoin = new PlayerJoinPacket
             {
-                Color = localPlayer.color,
-                Color_body = localPlayer.color_body,
-                Color_leftArm = localPlayer.color_leftArm,
-                Color_leftLeg = localPlayer.color_leftLeg,
-                Color_rightArm = localPlayer.color_rightArm,
-                Color_rightLeg = localPlayer.color_rightLeg,
-                FrontWheels = localPlayer.frontWheels,
-                Glasses = localPlayer.glasses,
-                Hat = localPlayer.hat,
-                Horn = localPlayer.horn,
-                Name = localPlayer.name,
-                Paraglider = localPlayer.paraglider,
-                RearWheels = localPlayer.rearWheels,
-                SteamID = localPlayer.steamID,
-                Zeepkist = localPlayer.zeepkist
+                Color = lp.color,
+                Color_body = lp.color_body,
+                Color_leftArm = lp.color_leftArm,
+                Color_leftLeg = lp.color_leftLeg,
+                Color_rightArm = lp.color_rightArm,
+                Color_rightLeg = lp.color_rightLeg,
+                FrontWheels = lp.frontWheels,
+                Glasses = lp.glasses,
+                Hat = lp.hat,
+                Horn = lp.horn,
+                Name = lp.name,
+                Paraglider = lp.paraglider,
+                RearWheels = lp.rearWheels,
+                SteamID = lp.steamID,
+                Zeepkist = lp.zeepkist
             };
 
             var outgoingMessage = client.CreateMessage();
@@ -448,7 +449,7 @@ namespace TeamXClient
             // Create and send editor state request packet
             EditorStateRequestPacket editorRequest = new EditorStateRequestPacket
             {
-                SteamID = localPlayer.steamID
+                SteamID = lp.steamID
             };
 
             var outgoingMessage2 = client.CreateMessage();
@@ -567,14 +568,12 @@ namespace TeamXClient
                 return;
             }
 
-            PlayerData playerData = Utils.GetLocalPlayerData();
-
             ChatMessagePacket chatMessage = new ChatMessagePacket()
             {
                 Message = message,
                 SteamID = ClientSteamID,
-                Username = playerData.name,
-                Color = playerData.chatColor
+                Username = Plugin.Instance.multiplayer.cachedLocalPlayerData.name,
+                Color = Plugin.Instance.multiplayer.cachedLocalPlayerData.chatColor
             };
 
             InterfaceManager.ReceivedChat(chatMessage);
@@ -610,12 +609,10 @@ namespace TeamXClient
         /// </summary>
         public void SendHorn()
         {
-            PlayerData playerData = Utils.GetLocalPlayerData();
-
             HornPacket hornPacket = new HornPacket()
             {
                 SteamID = ClientSteamID,
-                HornID = playerData.horn
+                HornID = Plugin.Instance.multiplayer.cachedLocalPlayerData.horn
             };
 
             var outgoingMessage = client.CreateMessage();
