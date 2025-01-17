@@ -4,6 +4,10 @@ using TeamXNetwork;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
+using ZeepSDK.Utilities;
+using ZeepSDK.Controls;
+using System.Linq;
 
 namespace TeamXClient
 {   
@@ -38,159 +42,80 @@ namespace TeamXClient
         public static Color darkGreen = new Color(0, 0.547f, 0.371f,  1f);
         public static Color darkestGreen = new Color(0, 0.348f, 0.238f, 1f);
         public static Color grey = new Color(0.3f, 0.3f, 0.3f, 1f);
-        public static Color darkgrey = new Color(0.2f, 0.2f, 0.2f, 1f);
+        public static Color darkgrey = new Color(0.2f, 0.2f, 0.2f, 1f);       
 
-        public static TextMeshProUGUI chatText;
-        public static string chatInputText = "";
-        public static List<ChatLine> chatHistory = new List<ChatLine>();
+        public static void UpdateLoop()
+        {
+            //When in the online editor, toggle the player list when holding down the key.
+            if (Plugin.Instance.IsTeamXEditor())
+            {                
+                if (Input.GetKeyDown(Plugin.Instance.cfg_showPlayerList.Value))
+                {
+                    ShowPlayerList();
+                }
 
+                if (Input.GetKeyUp(Plugin.Instance.cfg_showPlayerList.Value))
+                {
+                    HidePlayerList();
+                }
+            }
+
+            //When in the online editor, and we press the open chat input key, show the chat input.
+            if(Plugin.Instance.IsTeamXEditor())
+            {
+                if (Input.GetKeyDown(Plugin.Instance.cfg_openChatField.Value))
+                {
+                    if (!chatInputIsOpen)
+                    {
+                        OpenChatInput();
+                    }
+                }
+            }
+
+            //When in the online editor, toggle the chat visibility bool with a key.
+            if(Plugin.Instance.IsTeamXEditor())
+            {
+                if(Input.GetKeyDown(Plugin.Instance.cfg_toggleChat.Value))
+                {
+                    Plugin.Instance.cfg_chatEnabled.Value = !Plugin.Instance.cfg_chatEnabled.Value;
+                    ApplyChatWindowVisibilitySetting();
+                }
+            }
+        }
+
+        public static void OnGUILoop()
+        {
+            if(chatInputIsOpen)
+            {
+                RenderChatInputGUI();
+            }
+        }
+
+        public static void BlockInput()
+        {
+            currentBlocker = ControlsApi.DisableAllInput();
+        }
+
+        public static void UnblockInput()
+        {
+            if (currentBlocker.HasValue)
+            {
+                currentBlocker.Value.Dispose();
+                currentBlocker = null;
+            }
+
+            //As this is only really used for chat, its ok to put this in here, to make sure it absolutely doesnt show.
+            chatInputIsOpen = false;
+            chatInputNeedsFocus = false;
+        }
+
+        #region MainMenu
         /// <summary>
         /// Called when we enter the main menu to create the teamkist editor button.
         /// </summary>
         public static void SetupMainMenuUI()
         {
             GenerateLevelEditorOnlineButton();
-        }
-
-        /// <summary>
-        /// Called when the level editor is opened in TeamX mode. Will setup all the required UI.
-        /// </summary>
-        /// <param name="management"></param>
-        public static void SetupLevelEditorUI(bool management = false)
-        {
-            DisableLoadButton();
-
-            if (management)
-            {
-                InitializePanels();
-                CreateToolbarButton();
-            }
-
-            SetupChatUI();
-        }
-
-        /// <summary>
-        /// Will copy the Tooltips TextMesh to be used for the chat log.
-        /// </summary>
-        public static void SetupChatUI()
-        {
-            //Find the LEV_Tooltips
-            LEV_Tooltips tooltips = GameObject.FindObjectOfType<LEV_Tooltips>();
-
-            //Add the tooltips to the configurator
-            ZeepSDK.UI.UIApi.AddToConfigurator(tooltips.GetComponent<RectTransform>());
-
-            if(tooltips == null)
-            {
-                Plugin.Instance.Log("Tooltips UI not found.", LogType.Error);
-            }
-
-            //Copy the tooltips
-            chatText = GameObject.Instantiate(tooltips.gameObject, tooltips.transform.parent).GetComponent<TextMeshProUGUI>();
-            chatText.gameObject.name = "ChatWindow";
-            ZeepSDK.UI.UIApi.AddToConfigurator(chatText.GetComponent<RectTransform>());
-
-            //Get the index of the tooltip and place the chat there
-            int tooltipIndex = tooltips.transform.GetSiblingIndex();
-            chatText.transform.SetSiblingIndex(tooltipIndex);
-            chatText.enableWordWrapping = true;
-
-            //Destroy the unwanted components
-            GameObject.Destroy(chatText.GetComponent<LEV_Tooltips>());
-
-            if(Plugin.Instance.cfg_chatEnabled.Value)
-            {
-                //Make sure its active
-                chatText.gameObject.SetActive(true);
-            }
-            else
-            {
-                chatText.gameObject.SetActive(false);
-            }
-
-            RefreshChatBox();
-        }
-
-        public static void ReceivedChat(ChatMessagePacket chatMessage)
-        {
-            //Create the chatline
-            ChatLine line = new ChatLine()
-            {
-                message = chatMessage.Message,
-                userName = chatMessage.Username,
-                userColor = chatMessage.Color
-            };
-
-            //Add the chat line to the history
-            chatHistory.Add(line);
-
-            if(chatHistory.Count > 5)
-            {
-                chatHistory.RemoveAt(0);
-            }
-
-            RefreshChatBox();
-        }
-
-        public static void RefreshChatBox()
-        {
-            if(chatText != null)
-            {
-                List<string> chatLines = new List<string>();
-
-                foreach (ChatLine c in chatHistory)
-                {
-                    chatLines.Add($"<color={c.userColor}>{c.userName}</color>: <color=#ffffff>{c.message}</color>");
-                }
-
-                string fullChat = string.Join("\n", chatLines.ToArray());
-
-                chatText.text = fullChat;
-            }
-        }
-
-        /// <summary>
-        /// Called when the main panel is opened.
-        /// </summary>
-        public static void OnPanelOpen()
-        {
-            Plugin.Instance.editor.Central.tool.DisableAllTools();
-            Plugin.Instance.editor.Central.tool.RecolorButtons();
-            Plugin.Instance.editor.Central.tool.currentTool = 3;
-            Plugin.Instance.editor.Central.tool.inspectorTitle.text = "";
-
-            overallPanelState = TeamXPanelState.Open;
-        }
-
-        /// <summary>
-        /// Called when one of the panels is closed.
-        /// </summary>
-        public static void OnPanelClose()
-        {
-            Plugin.Instance.editor.Central.tool.EnableEditTool();
-            Plugin.Instance.editor.Central.tool.RecolorButtons();
-            Plugin.Instance.editor.Central.cam.OverrideOutsideGameView(false);
-
-            overallPanelState = TeamXPanelState.Closed;
-        }
-
-        /// <summary>
-        /// Creates the TeamX button at the top left of the tool bar.
-        /// </summary>
-        private static void CreateToolbarButton()
-        {
-            RectTransform teamXToolbarRect = GameObject.Instantiate(Plugin.Instance.editor.Central.tool.button_settings, Plugin.Instance.editor.Central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
-            teamXToolbarButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, teamXToolbarRect);
-            teamXToolbarButton.SetRectAnchors(0.005f, 0.1f, 0.025f, 0.9f);
-            teamXToolbarButton.BindButton(() =>
-            {
-                Plugin.Instance.editor.Central.selection.DeselectAllBlocks(false, "");
-
-                if (mainPanel != null)
-                {
-                    mainPanel.Open();
-                }
-            });           
         }
 
         /// <summary>
@@ -238,6 +163,33 @@ namespace TeamXClient
             TextMeshProUGUI buttonText = editorOnlineGenericButton.GetComponentInChildren<TextMeshProUGUI>();
             GameObject.Destroy(buttonText.GetComponent<I2.Loc.Localize>());
             buttonText.text = "TeamX Editor";
+
+            // Find the splitscreen image and apply it to the teamx button.
+            Image targetImage = FindImageByName("Players Icon 3");
+
+            if (targetImage != null)
+            {
+                // Get the second child named "Image" from the editorOnlineGenericButton
+                Transform secondChild = editorOnlineGenericButton.transform.GetChild(1); // 1 for the second child (0-based index)
+                if (secondChild != null && secondChild.name == "Image")
+                {
+                    Image teamxButtonImage = secondChild.GetComponent<Image>();
+
+                    if (teamxButtonImage != null)
+                    {
+                        teamxButtonImage.sprite = targetImage.sprite;
+                    }
+                }
+            }
+        }
+
+        public static Image FindImageByName(string imageName)
+        {
+            // Find all Image components in the scene
+            Image[] allImages = GameObject.FindObjectsOfType<Image>(true);
+
+            // Find the one with the specific name
+            return allImages.FirstOrDefault(image => image.name == imageName);
         }
 
         /// <summary>
@@ -259,6 +211,27 @@ namespace TeamXClient
                     Plugin.Instance.client.AttemptDisconnect();
                 }
             }
+        }
+        #endregion
+
+        #region LevelEditor
+
+        /// <summary>
+        /// Called when the level editor is opened in TeamX mode. Will setup all the required UI.
+        /// </summary>
+        /// <param name="management">Indicates if this client needs administrative panels.</param>
+        public static void SetupLevelEditorUI(bool management = false)
+        {
+            DisableLoadButton();
+
+            if (management)
+            {
+                InitializePanels();
+                CreateToolbarButton();
+            }
+
+            SetupChatUI();
+            SetupPlayerListUI();
         }
 
         /// <summary>
@@ -298,6 +271,53 @@ namespace TeamXClient
             levelManagerPanel.Initialize();
         }
 
+        /// <summary>
+        /// Creates the TeamX button at the top left of the tool bar.
+        /// </summary>
+        private static void CreateToolbarButton()
+        {
+            RectTransform teamXToolbarRect = GameObject.Instantiate(Plugin.Instance.editor.Central.tool.button_settings, Plugin.Instance.editor.Central.tool.button_settings.transform.parent).GetComponent<RectTransform>();
+            teamXToolbarButton = new TeamXPanelComponent(TeamXPanelComponentType.Button, teamXToolbarRect);
+            teamXToolbarButton.SetRectAnchors(0.005f, 0.1f, 0.025f, 0.9f);
+            teamXToolbarButton.BindButton(() =>
+            {
+                Plugin.Instance.editor.Central.selection.DeselectAllBlocks(false, "");
+
+                if (mainPanel != null)
+                {
+                    mainPanel.Open();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Called when the main panel is opened.
+        /// </summary>
+        public static void OnPanelOpen()
+        {
+            Plugin.Instance.editor.Central.tool.DisableAllTools();
+            Plugin.Instance.editor.Central.tool.RecolorButtons();
+            Plugin.Instance.editor.Central.tool.currentTool = 3;
+            Plugin.Instance.editor.Central.tool.inspectorTitle.text = "";
+
+            overallPanelState = TeamXPanelState.Open;
+        }
+
+        /// <summary>
+        /// Called when one of the panels is closed.
+        /// </summary>
+        public static void OnPanelClose()
+        {
+            Plugin.Instance.editor.Central.tool.EnableEditTool();
+            Plugin.Instance.editor.Central.tool.RecolorButtons();
+            Plugin.Instance.editor.Central.cam.OverrideOutsideGameView(false);
+
+            overallPanelState = TeamXPanelState.Closed;
+        }
+
+        #endregion
+
+        #region Helpers
         /// <summary>
         /// Helper function for cleaning a copied ui element.
         /// </summary>
@@ -369,65 +389,274 @@ namespace TeamXClient
         {
             RecolorButton(button, green, lightGreen, lightestGreen, false);
         }
+        #endregion
+
+        #region PlayerList
+        public static TextMeshProUGUI playerListText;
+        /// <summary>
+        /// Will copy the Tooltips TextMesh to be used for the player list.
+        /// </summary>
+        
+        public static void SetupPlayerListUI()
+        {
+            //Find the LEV_Tooltips
+            LEV_Tooltips tooltips = GameObject.FindObjectOfType<LEV_Tooltips>();
+
+            if (tooltips == null)
+            {
+                Plugin.Instance.Log("Tooltips UI not found.", LogType.Error);
+                return;
+            }
+
+            //Copy the tooltips to the player list window
+            playerListText = GameObject.Instantiate(tooltips.gameObject, tooltips.transform.parent).GetComponent<TextMeshProUGUI>();
+            playerListText.gameObject.name = "PlayerListWindow";
+
+            //Make the PlayerListWindow moveable.
+            ZeepSDK.UI.UIApi.AddToConfigurator(playerListText.GetComponent<RectTransform>());
+
+            //Get the index of the tooltip and place the playerlist window there
+            int tooltipIndex = tooltips.transform.GetSiblingIndex();
+            playerListText.transform.SetSiblingIndex(tooltipIndex);
+            playerListText.enableWordWrapping = false;
+
+            //Destroy the unwanted components
+            GameObject.Destroy(playerListText.GetComponent<LEV_Tooltips>());
+
+            //Hide the playerlist as it is only visible if a key is held
+            playerListText.gameObject.SetActive(false);
+        }
 
         /// <summary>
-        /// An OnGUI function that will show a simple list on screen with the currently connected players.
+        /// Fills the player list with the current players and makes it visible.
         /// </summary>
         public static void ShowPlayerList()
         {
-            float startHeight = Screen.height * 0.15f;
-            float boxWidth = Screen.width * 0.75f / 5f; // Width of each column
-            float boxHeight = Screen.height * 0.85f / 20f; // Height of each row
-            float columnSpacing = boxWidth + 10f; // Spacing between columns
-            float rowSpacing = boxHeight + 5f; // Spacing between rows
-            int maxRows = 20; // Max players per column
+            Debug.LogWarning("Showing");
+            if(playerListText == null)
+            {
+                Debug.LogWarning("Player list text is null wtf");
+                return;
+            }
 
+            //Get the current players.
             string localPlayerName = PlayerManager.Instance.steamAchiever.GetPlayerName(false);
             string[] connectedPlayerNames = Plugin.Instance.multiplayer.GetAllPlayerNames();
 
-            // Show the local player first.
-            GUI.Box(new Rect(0, startHeight, boxWidth, boxHeight), localPlayerName);
+            // Combine the localPlayerName and connectedPlayerNames into a single array
+            string[] allPlayerNames = new string[connectedPlayerNames.Length + 2];
+            allPlayerNames[0] = "Online Players:";
+            allPlayerNames[1] = localPlayerName;
+            connectedPlayerNames.CopyTo(allPlayerNames, 2);
 
-            // Show the rest of the players underneath.
-            int playerCount = connectedPlayerNames.Length;
-            for (int i = 0; i < playerCount; i++)
+            //Create the text
+            string playerListContent = string.Join('\n', allPlayerNames);
+
+            playerListText.text = playerListContent;
+            playerListText.gameObject.SetActive(true);       
+        }
+
+        /// <summary>
+        /// Hides the player list if available.
+        /// </summary>
+        public static void HidePlayerList()
+        {
+            if(playerListText == null)
             {
-                int row = (i + 1) % maxRows; // Row position
-                int column = (i + 1) / maxRows; // Column position
+                return;
+            }
 
-                float xPosition = column * columnSpacing; // Column offset
-                float yPosition = startHeight + row * rowSpacing; // Row offset
+            playerListText.gameObject.SetActive(false);
+        }
+        #endregion
 
-                GUI.Box(new Rect(xPosition, yPosition, boxWidth, boxHeight), connectedPlayerNames[i]);
+        #region Chat
+        public static TextMeshProUGUI chatText;
+        public static string chatInputText = "";
+        public static List<ChatLine> chatHistory = new List<ChatLine>();
+
+        //A bool that keeps track if the chat input box is open or not.
+        private static bool chatInputIsOpen = false;
+        public static bool chatInputNeedsFocus = false;
+
+        //Blocker used for blocking inputs when the chat input is open.
+        private static DisposableBag? currentBlocker = null;
+
+        /// <summary>
+        /// Will copy the Tooltips TextMesh to be used for the chat log.
+        /// </summary>
+        public static void SetupChatUI()
+        {
+            //Find the LEV_Tooltips
+            LEV_Tooltips tooltips = GameObject.FindObjectOfType<LEV_Tooltips>();
+
+            if (tooltips == null)
+            {
+                Plugin.Instance.Log("Tooltips UI not found.", LogType.Error);
+                return;
+            }
+
+            //Add the tooltips to the configurator
+            ZeepSDK.UI.UIApi.AddToConfigurator(tooltips.GetComponent<RectTransform>());            
+
+            //Copy the tooltips to the chat window
+            chatText = GameObject.Instantiate(tooltips.gameObject, tooltips.transform.parent).GetComponent<TextMeshProUGUI>();
+            chatText.gameObject.name = "ChatWindow";
+
+            //Make the ChatWindow moveable.
+            ZeepSDK.UI.UIApi.AddToConfigurator(chatText.GetComponent<RectTransform>());
+
+            //Get the index of the tooltip and place the chat there
+            int tooltipIndex = tooltips.transform.GetSiblingIndex();
+            chatText.transform.SetSiblingIndex(tooltipIndex);
+            chatText.enableWordWrapping = true;
+
+            //Destroy the unwanted components
+            GameObject.Destroy(chatText.GetComponent<LEV_Tooltips>());
+
+            //Show or hide the chat based on the config.
+            ApplyChatWindowVisibilitySetting();
+
+            //Add the current history to the chat.
+            RefreshChatBox();
+        }
+
+        /// <summary>
+        /// Hide or show the chat based on the config setting.
+        /// </summary>
+        public static void ApplyChatWindowVisibilitySetting()
+        {
+            if(chatText == null)
+            {
+                return;
+            }
+
+            if (Plugin.Instance.cfg_chatEnabled.Value)
+            {
+                chatText.gameObject.SetActive(true);
+            }
+            else
+            {
+                chatText.gameObject.SetActive(false);
             }
         }
 
-        public static void ShowChatInput()
+        /// <summary>
+        /// Updates the chat history and chat window when a message is received. Local messages will also be send to this function.
+        /// </summary>
+        /// <param name="chatMessage">The <see cref="ChatMessagePacket"/> received from the server, or created from local chat input. </param>
+        public static void ReceivedChat(ChatMessagePacket chatMessage)
         {
-            bool enterSend = false;
+            //Create the chatline
+            ChatLine line = new ChatLine()
+            {
+                message = chatMessage.Message,
+                userName = chatMessage.Username,
+                userColor = chatMessage.Color
+            };
+
+            //Add the chat line to the history
+            chatHistory.Add(line);
+
+            if (chatHistory.Count > Plugin.Instance.cfg_chatHistoryLength.Value)
+            {
+                chatHistory.RemoveAt(0);
+            }
+
+            RefreshChatBox();
+        }
+
+        /// <summary>
+        /// Clears chat box and refills it with the latest chat.
+        /// </summary>
+        public static void RefreshChatBox()
+        {
+            if (chatText != null)
+            {
+                List<string> chatLines = new List<string>();
+
+                foreach (ChatLine c in chatHistory)
+                {
+                    chatLines.Add($"<color={c.userColor}>{c.userName}</color>: <color=#ffffff>{c.message}</color>");
+                }
+
+                string fullChat = string.Join("\n", chatLines.ToArray());
+
+                chatText.text = fullChat;
+            }
+        }
+
+        /// <summary>
+        /// Opens the chat input in the level editor
+        /// </summary>
+        public static void OpenChatInput()
+        {
+            //Set a bool so OnGUI knows to show the input.
+            chatInputIsOpen = true;
+
+            //When opening let the OnGUI take focus on the input.
+            chatInputNeedsFocus = true;
+
+            BlockInput();
+        }
+
+        public static void RenderChatInputGUI()
+        {
+            //Detect the enter press in the GUI for sending the message.
+            bool enterPressed = false;
             Event e = Event.current;
-            if(e.isKey)
+            if (e.isKey)
             {
                 string name = e.keyCode.ToString().ToLower();
-                if(name.Contains("return"))
+                if (name.Contains("return"))
                 {
-                    enterSend = true;
+                    enterPressed = true;
                 }
             }
 
             GUI.SetNextControlName("ChatInputField");
             chatInputText = GUI.TextField(new Rect(0, Screen.height - 30f, Screen.width * 0.25f, 30f), chatInputText);
 
-            if(Plugin.Instance.chatInputNeedsFocus)
+            if(chatInputNeedsFocus)
             {
                 GUI.FocusControl("ChatInputField");
-                Plugin.Instance.chatInputNeedsFocus = false;
-            }   
-            
-            if(enterSend)
+                chatInputNeedsFocus = false;
+            }
+
+            if (enterPressed)
             {
-                Plugin.Instance.ProcessChatInput();
+                ProcessChatInput();
             }
         }
+
+        /// <summary>
+        /// Called when the chat enabled setting has changed so we can enable or disable the game object.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public static void Cfg_chatEnabled_SettingChanged(object sender, EventArgs e)
+        {
+            ApplyChatWindowVisibilitySetting();
+        }
+
+        public static void ProcessChatInput()
+        {
+            //Get Text
+            string currentText = chatInputText;
+
+            //Clear field
+            chatInputText = "";
+
+            //Close chat field
+            chatInputIsOpen = false;
+
+            if (!string.IsNullOrEmpty(currentText))
+            {
+                Plugin.Instance.client.SendChatMessage(currentText);
+            }
+
+            UnblockInput();
+        }
+        #endregion
     }    
 }

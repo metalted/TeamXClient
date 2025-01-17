@@ -333,7 +333,6 @@ namespace TeamXClient
         }
     }
 
-
     /// <summary>
     /// Honk honk
     /// </summary>
@@ -342,7 +341,7 @@ namespace TeamXClient
     {
         public static void Prefix()
         {
-            if (Plugin.Instance.IsTeamXEditor())
+            if (Plugin.Instance.IsTeamXEditor() || Plugin.Instance.IsTeamXGame())
             {
                 if (Plugin.Instance.isRemoteHorn)
                 {

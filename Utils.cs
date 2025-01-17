@@ -227,7 +227,6 @@ namespace TeamXClient
                 playerData.hat = 23000;
                 playerData.color = 1000;
                 playerData.zeepkist = 1000;
-
                 playerData.zeepkist = 1000;
                 playerData.frontWheels = 1000;
                 playerData.rearWheels = 1000;

@@ -70,6 +70,9 @@ namespace TeamXClient
 
             //Clear the chat history
             InterfaceManager.chatHistory.Clear();
+
+            //Make sure we unblock
+            InterfaceManager.UnblockInput();
         }
 
         /// <summary>
@@ -151,8 +154,10 @@ namespace TeamXClient
             var client = Plugin.Instance.client;
             var multiplayer = Plugin.Instance.multiplayer;
 
+            InterfaceManager.UnblockInput();
+
             if (gameState == GameState.TeamXEditor)
-            {
+            {                
                 gameState = GameState.TeamXGame;
             }
 
