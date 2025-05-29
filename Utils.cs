@@ -124,7 +124,7 @@ namespace TeamXClient
     public struct EditorStateData
     {
         public int floor;
-        public int skybox;
+        public string skybox;
         public List<string> blocks;
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace TeamXClient
         public EditorStateData(bool b = true)
         {
             floor = -1;
-            skybox = 0;
+            skybox = "{\"enviro\":{\"skybox\":0,\"groundMat\":90,\"overrideFog_b\":false,\"overrideFog_f\":0,\"skyboxOverride\":null}}";
             blocks = new List<string>();
         }
     }
@@ -146,21 +146,6 @@ namespace TeamXClient
         public static bool IsBlockSelected(string UID)
         {
             return Plugin.Instance.editor.Central.selection.list.Any(b => b.UID == UID);
-        }
-
-        public static BlockPropertyJSON GetFixedJSONBlock(string blockJSON)
-        {
-            BlockPropertyJSON block = LEV_UndoRedo.GetJSONblock(blockJSON);
-            block.properties[0] = block.position.x;
-            block.properties[1] = block.position.y;
-            block.properties[2] = block.position.z;
-            block.properties[3] = block.eulerAngles.x;
-            block.properties[4] = block.eulerAngles.y;
-            block.properties[5] = block.eulerAngles.z;
-            block.properties[6] = block.localScale.x;
-            block.properties[7] = block.localScale.y;
-            block.properties[8] = block.localScale.z;
-            return block;
         }
 
         public static string GetOnlinePlayerHexColor()
@@ -344,7 +329,7 @@ namespace TeamXClient
 
             foreach (var path in paths)
             {
-                Debug.Log(path);
+                Plugin.Instance.Log(path, LogType.Debug);
 
                 // Split the path to extract the project name and file name
                 string[] parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);

@@ -99,14 +99,14 @@ namespace TeamXClient
 
         private void OnReloadButton()
         {
-            Debug.Log("Reload");
+            Plugin.Instance.Log("Reload", LogType.Debug);
 
             Plugin.Instance.client.SendSaveConfigurationRequestPacket();
         }
 
         private void OnApplyButton()
         {
-            Debug.Log("Apply");
+            Plugin.Instance.Log("Apply", LogType.Debug);
 
             int autoSaveValue;
             if(!int.TryParse(elements["AutoSaveIntervalInput"].GetText(), out autoSaveValue))

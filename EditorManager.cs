@@ -19,14 +19,14 @@ namespace TeamXClient
         public int Floor { get; set; }
 
         /// <summary>
-        /// The current skybox ID in the editor.
+        /// The current skybox in the editor.
         /// </summary>
-        public int Skybox { get; set; }
+        public string Skybox { get; set; }
 
         /// <summary>
         /// A dictionary of blocks managed by the editor, indexed by their unique UIDs.
         /// </summary>
-        private Dictionary<string, Block> Blocks { get; set; }
+        private Dictionary<string, BlockPropertyJSONX> Blocks { get; set; }
 
         /// <summary>
         /// Modifier for performing actions on the editor's contents.
@@ -54,8 +54,8 @@ namespace TeamXClient
         public EditorManager()
         {
             Floor = -1;
-            Skybox = 0;
-            Blocks = new Dictionary<string, Block>();
+            Skybox = "{\"enviro\":{\"skybox\":0,\"groundMat\":90,\"overrideFog_b\":false,\"overrideFog_f\":0,\"skyboxOverride\":null}}";
+            Blocks = new Dictionary<string, BlockPropertyJSONX>();
             Modifier = new EditorModifier(this);
             Observer = new EditorObserver(this);
         }
@@ -113,8 +113,8 @@ namespace TeamXClient
 
             foreach (string s in stateData.blocks)
             {
-                Block block = s.FromJson();
-                Blocks.Add(block.UID, block);
+                BlockPropertyJSONX block = BlockPropertyJSONX.FromJson(s);
+                Blocks.Add(block.blockPropertyJSON.u, block);
             }
         }
 
@@ -126,7 +126,7 @@ namespace TeamXClient
             Modifier.UpdateSkybox(Skybox);
             Modifier.UpdateFloor(Floor);
 
-            foreach (KeyValuePair<string, Block> block in Blocks)
+            foreach (KeyValuePair<string, BlockPropertyJSONX> block in Blocks)
             {
                 Modifier.CreateBlock(block.Value, false);
             }
@@ -138,11 +138,11 @@ namespace TeamXClient
         /// Adds a new block to the editor state.
         /// </summary>
         /// <param name="block">The block to add.</param>
-        public void Add(Block block)
+        public void Add(BlockPropertyJSONX block)
         {
-            if (!Blocks.ContainsKey(block.UID))
+            if (!Blocks.ContainsKey(block.blockPropertyJSON.u))
             {
-                Blocks.Add(block.UID, block);
+                Blocks.Add(block.blockPropertyJSON.u, block);
             }
         }
 
@@ -151,9 +151,9 @@ namespace TeamXClient
         /// </summary>
         /// <param name="uid">The UID of the block to retrieve.</param>
         /// <returns>The block with the specified UID, or null if not found.</returns>
-        public Block Get(string uid)
+        public BlockPropertyJSONX Get(string uid)
         {
-            Blocks.TryGetValue(uid, out Block block);
+            Blocks.TryGetValue(uid, out BlockPropertyJSONX block);
             return block;
         }
 
@@ -181,11 +181,11 @@ namespace TeamXClient
         /// Updates the data of an existing block.
         /// </summary>
         /// <param name="block">The block with updated data.</param>
-        public void Update(Block block)
+        public void Update(BlockPropertyJSONX block)
         {
-            if (Blocks.ContainsKey(block.UID))
+            if (Blocks.ContainsKey(block.blockPropertyJSON.u))
             {
-                Blocks[block.UID] = block;
+                Blocks[block.blockPropertyJSON.u] = block;
             }
         }
 
@@ -208,7 +208,7 @@ namespace TeamXClient
         {
             foreach (string uid in added)
             {
-                Block block = Get(uid);
+                BlockPropertyJSONX block = Get(uid);
                 if (block == null) continue;
 
                 //Are we allowed to select this?
@@ -234,7 +234,7 @@ namespace TeamXClient
         {
             foreach (string uid in removed)
             {
-                Block block = Get(uid);
+                BlockPropertyJSONX block = Get(uid);
                 if (block == null) continue;
 
                 //Are we allowed to select this?

@@ -24,22 +24,22 @@ namespace TeamXClient
                         case Change_Collection.ChangeType.block:
                             if (changeSingle.before == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockCreated(Utils.GetFixedJSONBlock(changeSingle.after));
+                                Plugin.Instance.editor.Observer.BlockCreated(LEV_UndoRedo.GetJSONblock(changeSingle.after));
                             }
                             else if (changeSingle.after == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockDestroyed(Utils.GetFixedJSONBlock(changeSingle.before));
+                                Plugin.Instance.editor.Observer.BlockDestroyed(LEV_UndoRedo.GetJSONblock(changeSingle.before));
                             }
                             else
                             {
-                                Plugin.Instance.editor.Observer.BlockUpdated(Utils.GetFixedJSONBlock(changeSingle.before), Utils.GetFixedJSONBlock(changeSingle.after));
+                                Plugin.Instance.editor.Observer.BlockUpdated(LEV_UndoRedo.GetJSONblock(changeSingle.before), LEV_UndoRedo.GetJSONblock(changeSingle.after));
                             }
                             break;
                         case Change_Collection.ChangeType.floor:
                             Plugin.Instance.editor.Observer.FloorUpdated(changeSingle.int_before, changeSingle.int_after);
                             break;
                         case Change_Collection.ChangeType.skybox:
-                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.int_before, changeSingle.int_after);
+                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.customSkybox_before, changeSingle.customSkybox_after, changeSingle.int_before, changeSingle.int_after);
                             break;
                         case Change_Collection.ChangeType.selection:
                             break;
@@ -68,22 +68,22 @@ namespace TeamXClient
                         case Change_Collection.ChangeType.block:
                             if (changeSingle.before == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockDestroyed(Utils.GetFixedJSONBlock(changeSingle.after));
+                                Plugin.Instance.editor.Observer.BlockDestroyed(LEV_UndoRedo.GetJSONblock(changeSingle.after));
                             }
                             else if (changeSingle.after == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockCreated(Utils.GetFixedJSONBlock(changeSingle.before));
+                                Plugin.Instance.editor.Observer.BlockCreated(LEV_UndoRedo.GetJSONblock(changeSingle.before));
                             }
                             else
                             {
-                                Plugin.Instance.editor.Observer.BlockUpdated(Utils.GetFixedJSONBlock(changeSingle.after), Utils.GetFixedJSONBlock(changeSingle.before));
+                                Plugin.Instance.editor.Observer.BlockUpdated(LEV_UndoRedo.GetJSONblock(changeSingle.after), LEV_UndoRedo.GetJSONblock(changeSingle.before));
                             }
                             break;
                         case Change_Collection.ChangeType.floor:
                             Plugin.Instance.editor.Observer.FloorUpdated(changeSingle.int_after, changeSingle.int_before);
                             break;
                         case Change_Collection.ChangeType.skybox:
-                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.int_after, changeSingle.int_before);
+                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.customSkybox_before, changeSingle.customSkybox_after, changeSingle.int_before, changeSingle.int_after);
                             break;
                         case Change_Collection.ChangeType.selection:
                             break;
@@ -112,22 +112,22 @@ namespace TeamXClient
                         case Change_Collection.ChangeType.block:
                             if (changeSingle.before == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockCreated(Utils.GetFixedJSONBlock(changeSingle.after));
+                                Plugin.Instance.editor.Observer.BlockCreated(LEV_UndoRedo.GetJSONblock(changeSingle.after));
                             }
                             else if (changeSingle.after == null)
                             {
-                                Plugin.Instance.editor.Observer.BlockDestroyed(Utils.GetFixedJSONBlock(changeSingle.before));
+                                Plugin.Instance.editor.Observer.BlockDestroyed(LEV_UndoRedo.GetJSONblock(changeSingle.before));
                             }
                             else
                             {
-                                Plugin.Instance.editor.Observer.BlockUpdated(Utils.GetFixedJSONBlock(changeSingle.before), Utils.GetFixedJSONBlock(changeSingle.after));
+                                Plugin.Instance.editor.Observer.BlockUpdated(LEV_UndoRedo.GetJSONblock(changeSingle.before), LEV_UndoRedo.GetJSONblock(changeSingle.after));
                             }
                             break;
                         case Change_Collection.ChangeType.floor:
                             Plugin.Instance.editor.Observer.FloorUpdated(changeSingle.int_before, changeSingle.int_after);
                             break;
                         case Change_Collection.ChangeType.skybox:
-                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.int_before, changeSingle.int_after);
+                            Plugin.Instance.editor.Observer.SkyboxUpdated(changeSingle.customSkybox_before, changeSingle.customSkybox_after, changeSingle.int_before, changeSingle.int_after);
                             break;
                         case Change_Collection.ChangeType.selection:
                             break;

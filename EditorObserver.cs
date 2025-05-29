@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Newtonsoft.Json;
 
 namespace TeamXClient
 {
@@ -34,35 +35,27 @@ namespace TeamXClient
         {
             int count = editor.GetBlockCountBy(Plugin.Instance.client.ClientSteamID);
             bool isAllowed = Plugin.Instance.perms.CanCreate() && count < Plugin.Instance.perms.GetBlockLimit();
-            bool isBanned = Plugin.Instance.perms.IsBlockBanned(afterState.blockID);
+            bool isBanned = Plugin.Instance.perms.IsBlockBanned(afterState.i);
             if (isAllowed && !isBanned)
             {
-                Block block = new Block()
+                BlockPropertyJSONX block = new BlockPropertyJSONX()
                 {
-                    ID = afterState.blockID,
-                    PositionX = afterState.position.x,
-                    PositionY = afterState.position.y,
-                    PositionZ = afterState.position.z,
-                    EulerAnglesX = afterState.eulerAngles.x,
-                    EulerAnglesY = afterState.eulerAngles.y,
-                    EulerAnglesZ = afterState.eulerAngles.z,
-                    LocalScaleX = afterState.localScale.x,
-                    LocalScaleY = afterState.localScale.y,
-                    LocalScaleZ = afterState.localScale.z,
-                    Properties = afterState.properties,
-                    UID = afterState.UID,
+                    blockPropertyJSON = afterState,
                     SteamID = Plugin.Instance.client.ClientSteamID
                 };
 
                 //Store the block
                 editor.Add(block);
 
-                Plugin.Instance.client.SendBlockCreate(block);
+                if(!Plugin.Instance.syncBlockIDs.Contains(afterState.i))
+                {
+                    Plugin.Instance.client.SendBlockCreate(block);
+                }                
             }
             //Not allowed
             else
             {
-                editor.Modifier.DestroyBlock(afterState.UID);
+                editor.Modifier.DestroyBlock(afterState.u);
             }
         }
 
@@ -74,7 +67,7 @@ namespace TeamXClient
         public void BlockUpdated(BlockPropertyJSON beforeState, BlockPropertyJSON afterState)
         {
             //Get the block
-            Block block = editor.Get(afterState.UID);
+            BlockPropertyJSONX block = editor.Get(afterState.u);
 
             if(block == null)
             {
@@ -83,27 +76,19 @@ namespace TeamXClient
                 //As the block is not found in the editor anymore, destroy it (this causes issues)
                 //As the block is not found in the online editor anymore, recreate it so the games are synced again.
 
-                block = new Block()
+                block = new BlockPropertyJSONX
                 {
-                    ID = afterState.blockID,
-                    PositionX = afterState.position.x,
-                    PositionY = afterState.position.y,
-                    PositionZ = afterState.position.z,
-                    EulerAnglesX = afterState.eulerAngles.x,
-                    EulerAnglesY = afterState.eulerAngles.y,
-                    EulerAnglesZ = afterState.eulerAngles.z,
-                    LocalScaleX = afterState.localScale.x,
-                    LocalScaleY = afterState.localScale.y,
-                    LocalScaleZ = afterState.localScale.z,
-                    Properties = afterState.properties,
-                    UID = afterState.UID,
+                    blockPropertyJSON = afterState,
                     SteamID = Plugin.Instance.client.ClientSteamID
-                };
+                };               
 
                 //Store the block
                 editor.Add(block);
 
-                Plugin.Instance.client.SendBlockCreate(block);
+                if (!Plugin.Instance.syncBlockIDs.Contains(afterState.i))
+                {
+                    Plugin.Instance.client.SendBlockCreate(block);
+                }
                 return;
             }
 
@@ -113,24 +98,18 @@ namespace TeamXClient
             if (isAllowed)
             {
                 //Save the change
-                block.PositionX = afterState.position.x;
-                block.PositionY = afterState.position.y;
-                block.PositionZ = afterState.position.z;
-                block.EulerAnglesX = afterState.eulerAngles.x;
-                block.EulerAnglesY = afterState.eulerAngles.y;
-                block.EulerAnglesZ = afterState.eulerAngles.z;
-                block.LocalScaleX = afterState.localScale.x;
-                block.LocalScaleY = afterState.localScale.y;
-                block.LocalScaleZ = afterState.localScale.z;
-                block.Properties = afterState.properties;
+                block.blockPropertyJSON = afterState;
 
-                Plugin.Instance.client.SendBlockUpdate(block);
+                if (!Plugin.Instance.syncBlockIDs.Contains(afterState.i))
+                {
+                    Plugin.Instance.client.SendBlockUpdate(block);
+                }
             }
             //We cant edit this block, revert to before.
             else
             {
                 //Remove the block from the selection if its in there
-                int index = editor.Central.selection.list.FindIndex(s => s.UID == afterState.UID);
+                int index = editor.Central.selection.list.FindIndex(s => s.UID == afterState.u);
 
                 if(index > 0)
                 {
@@ -157,7 +136,7 @@ namespace TeamXClient
         public void BlockDestroyed(BlockPropertyJSON beforeState)
         {
             //Get the block
-            Block block = editor.Get(beforeState.UID);
+            BlockPropertyJSONX block = editor.Get(beforeState.u);
 
             if(block == null)
             {
@@ -172,11 +151,14 @@ namespace TeamXClient
             if (isAllowed)
             {
                 //Remove the block and send the update
-                string uid = block.UID;
+                string uid = block.blockPropertyJSON.u;
 
                 editor.Remove(uid);
 
-                Plugin.Instance.client.SendBlockDestroy(uid);
+                if (!Plugin.Instance.syncBlockIDs.Contains(block.blockPropertyJSON.i))
+                {
+                    Plugin.Instance.client.SendBlockDestroy(uid);
+                }                
             }
             //We cant edit this block, revert to before.
             else
@@ -210,18 +192,32 @@ namespace TeamXClient
         /// </summary>
         /// <param name="before">The skybox state before the update.</param>
         /// <param name="after">The skybox state after the update.</param>
-        public void SkyboxUpdated(int before, int after)
+        public void SkyboxUpdated(string before, string after, int beforeInt, int afterInt)
         {
             if (Plugin.Instance.perms.CanEditSkybox())
             {
-                editor.Skybox = after;
+                Environment_DataObject env = new Environment_DataObject();
+                env.skyboxOverride = string.IsNullOrEmpty(after) ? null : JsonConvert.DeserializeObject<SkyboxCreator_DataObject>(after);
+                env.skybox = afterInt;
+                env.groundMat = editor.Floor;
+                env.overrideFog_b = editor.Central.skybox.overrideFogBool;
+                env.overrideFog_f = editor.Central.skybox.overrideFogFloat;
+                string json = JsonConvert.SerializeObject(env);
 
-                Plugin.Instance.client.SendSkyboxUpdate(after);
+                editor.Skybox = json;
+                Plugin.Instance.client.SendSkyboxUpdate(json);              
             }
             //Not allowed
             else
             {
-                editor.Modifier.UpdateSkybox(before);
+                Environment_DataObject env = new Environment_DataObject();
+                env.skyboxOverride = string.IsNullOrEmpty(before) ? null : JsonConvert.DeserializeObject<SkyboxCreator_DataObject>(before);
+                env.skybox = beforeInt;
+                env.groundMat = editor.Floor;
+                env.overrideFog_b = editor.Central.skybox.overrideFogBool;
+                env.overrideFog_f = editor.Central.skybox.overrideFogFloat;
+                string json = JsonConvert.SerializeObject(env);
+                editor.Modifier.UpdateSkybox(json);
             }
         }
     }    

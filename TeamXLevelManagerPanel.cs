@@ -72,7 +72,7 @@ namespace TeamXClient
         private void OnClickedProjectFile(string project, string fileName)
         {
             selectedLevelPath = project + "/ServerSaves/" + fileName;
-            Debug.Log(selectedLevelPath);
+            Plugin.Instance.Log(selectedLevelPath, LogType.Debug);
             elements["Selected"].SetText(fileName);
         }
 

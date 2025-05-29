@@ -48,8 +48,6 @@ namespace TeamXClient
         {
             Selection = selection;
 
-            Debug.LogWarning("Initializing SelectionObserver");
-
             lastSelectionUIDs = new HashSet<string>();
             currentUIDs = new HashSet<string>();
             removedUIDs = new List<string>();

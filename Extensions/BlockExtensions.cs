@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace TeamXClient.Extensions
 {
+    /*
     /// <summary>
     /// Provides JSON serialization and deserialization methods for the <see cref="Block"/> class.
     /// </summary>
@@ -14,7 +15,7 @@ namespace TeamXClient.Extensions
         /// </summary>
         /// <param name="block">The block to serialize.</param>
         /// <returns>A JSON string representation of the block.</returns>
-        public static string ToJson(this Block block)
+        public static string ToJson(this BlockPropertyJSONX block)
         {
             return JsonConvert.SerializeObject(block);
         }
@@ -24,11 +25,12 @@ namespace TeamXClient.Extensions
         /// </summary>
         /// <param name="json">The JSON string representing the block.</param>
         /// <returns>The deserialized block.</returns>
-        public static Block FromJson(this string json)
+        public static BlockPropertyJSONX FromJson(this string json)
         {
-            return JsonConvert.DeserializeObject<Block>(json);
+            return JsonConvert.DeserializeObject<BlockPropertyJSONX>(json);
         }
 
+        
         /// <summary>
         /// Converts a <see cref="Block"/> object to a <see cref="BlockPropertyJSON"/>.
         /// </summary>
@@ -51,5 +53,5 @@ namespace TeamXClient.Extensions
                 UID = block.UID
             };
         }
-    }
+    }*/
 }

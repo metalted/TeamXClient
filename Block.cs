@@ -7,11 +7,13 @@ using UnityEngine;
 
 namespace TeamXClient
 {
+    //This class will be replaced by BlockPropertyJSONX so we can just use the games block structure.
+
     /// <summary>
     /// Represents a block in the editor or game world, containing properties for position,
     /// rotation, scale, and additional metadata.
     /// </summary>
-    public class Block
+    /*public class Block
     {
         /// <summary>
         /// Gets or sets the X-coordinate of the block's position in world space.
@@ -92,5 +94,5 @@ namespace TeamXClient
         /// owns or created the block.
         /// </remarks>
         public ulong SteamID { get; set; }
-    }
+    }*/
 }

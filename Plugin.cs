@@ -5,6 +5,7 @@ using System;
 using UnityEngine;
 using TeamXNetwork;
 using ZeepSDK.UI;
+using System.Collections.Generic;
 
 namespace TeamXClient
 {
@@ -14,9 +15,33 @@ namespace TeamXClient
         //Plugin properties
         public const string pluginGUID = "com.metalted.zeepkist.teamx";
         public const string pluginName = "TeamX";
-        public const string pluginVersion = "1.2.3";
+        public const string pluginVersion = "2.1";
 
         public static Plugin Instance;
+        public Action<string> OnCommandReceived;
+        public Action<(ulong, string)> OnCustomMessageReceived;
+        public List<int> syncBlockIDs = new List<int>();
+
+        public void SendCustomMessage(string payload)
+        {
+            if(IsTeamXEditor() || IsTeamXGame())
+            {
+                client.SendCustomMessage(payload);
+            }
+        }
+
+        public void StopSyncing(int blockID)
+        {
+            if(!syncBlockIDs.Contains(blockID))
+            {
+                syncBlockIDs.Add(blockID);
+            }
+        }
+
+        public void ClearStopSync()
+        {
+            syncBlockIDs.Clear();
+        }
         
         //Manages multiplayer models and references.
         public MultiplayerManager multiplayer;
@@ -31,8 +56,6 @@ namespace TeamXClient
 
         //Creates the client if not initialized yet.
         private bool init = false;
-        //Which messages to show in the console (0 = debug, 1 = messages)
-        public int logLevel = 1;
 
         //Config settings for ip address and port.
         public ConfigEntry<string> cfg_serverIP;
@@ -42,6 +65,7 @@ namespace TeamXClient
         public ConfigEntry<bool> cfg_chatEnabled;
         public ConfigEntry<KeyCode> cfg_toggleChat;
         public ConfigEntry<int> cfg_chatHistoryLength;
+        public ConfigEntry<int> cfg_logLevel;
 
         //Honk honk
         public bool isRemoteHorn = false;
@@ -70,7 +94,25 @@ namespace TeamXClient
             cfg_chatEnabled = Config.Bind("Settings", "Chat History Window Visible", false, "Is the chat log visible on screen");
             cfg_toggleChat = Config.Bind("Settings", "Chat History Window Visible Key Toggle", KeyCode.None, "Toggle Chat Enabled setting with a key.");
             cfg_chatHistoryLength = Config.Bind("Settings", "Chat History Length", 5, "The maximum length of the chat history.");
+            cfg_logLevel = Config.Bind("Debug", "Log Level", 1, "0:Debug,1:Standard,2:Warnings,3:Errors");
             cfg_chatEnabled.SettingChanged += InterfaceManager.Cfg_chatEnabled_SettingChanged;
+
+            OnCommandReceived += (cmd) =>
+            {
+                if (cmd == "pong")
+                {
+                    PlayerManager.Instance.messenger.Log("Pong!", 1f);
+                }
+
+                Log("Command received: " + cmd, LogType.Debug);
+            };
+
+            OnCustomMessageReceived += (tuple) =>
+            {
+                ulong steamID = tuple.Item1;
+                string payload = tuple.Item2;
+                Log("Custom message received from " + steamID + ": " + payload, LogType.Debug);
+            };
         }        
 
         public int GetBlockAllowance()
@@ -147,25 +189,25 @@ namespace TeamXClient
             switch (logType)
             {
                 case LogType.Debug:
-                    if (logLevel <= 0)
+                    if (cfg_logLevel.Value <= 0)
                     {
                         Logger.LogInfo($" {(header ? "[TEAMX]" : "")} {message}");
                     }
                     break;
                 case LogType.Message:
-                    if (logLevel <= 1)
+                    if (cfg_logLevel.Value <= 1)
                     {
                         Logger.LogInfo($" {(header ? "[TEAMX]" : "")} {message}");
                     }
                     break;
                 case LogType.Warning:
-                    if (logLevel <= 2)
+                    if (cfg_logLevel.Value <= 2)
                     {
                         Logger.LogWarning($" {(header ? "[TEAMX]" : "")} {message}");
                     }
                     break;
                 case LogType.Error:
-                    if (logLevel <= 3)
+                    if (cfg_logLevel.Value <= 3)
                     {
                         Logger.LogError($" {(header ? "[TEAMX]" : "")} {message}");
                     }

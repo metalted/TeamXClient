@@ -80,7 +80,7 @@ namespace TeamXClient
             }
             catch
             {
-                Debug.Log("No hoethouder");
+                Plugin.Instance.Log("No hoethouder", LogType.Error);
             }
 
             //Remove the ghost wheels

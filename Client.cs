@@ -4,6 +4,7 @@ using TeamXNetwork;
 using TeamXClient.Extensions;
 using UnityEngine;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace TeamXClient
 {
@@ -356,7 +357,12 @@ namespace TeamXClient
                 case CustomMessagePacket customMessagePacket:
                     HandleCustomMessage(customMessagePacket);
                     break;
-
+                case ChatCommandResponsePacket chatCommandResponse:
+                    HandleCommandResponse(chatCommandResponse);
+                    break;
+                case EditorDeselectAllOrderPacket deselectAllOrder:
+                    HandleDeselectAllOrder(deselectAllOrder);
+                    break;
                 default:
                     // If no case matches, throw an exception
                     throw new InvalidOperationException($"Unhandled packet type: {packet.GetType().Name}");
@@ -584,6 +590,59 @@ namespace TeamXClient
         }
 
         /// <summary>
+        /// Send a command to the server if player is admin.
+        /// </summary>
+        /// <param name="command">The command to send</param>
+        public void SendCommand(string command)
+        {
+            if(string.IsNullOrEmpty(command))
+            {
+                return;
+            }
+
+            if(!Plugin.Instance.perms.IsAdmin())
+            {
+                return;
+            }
+
+            ChatCommandPacket chatCommand = new ChatCommandPacket()
+            {
+                Command = command,
+                SteamID = ClientSteamID
+            };
+
+            var outgoingMessage = client.CreateMessage();
+            PacketUtility.Pack(chatCommand, outgoingMessage);
+            client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
+        }
+
+        /// <summary>
+        /// Handle the response from a chat command.
+        /// </summary>
+        /// <param name="commandResponsePacket">The <see cref="ChatCommandResponsePacket"/> containing the response. </param>
+        public void HandleCommandResponse(ChatCommandResponsePacket commandResponsePacket)
+        {
+            switch (commandResponsePacket.ResponseType)
+            {
+                case "PlayerList":
+                    Debug.Log("### TeamX PlayerList ###");
+                    string[] entries = commandResponsePacket.Message.Split('|');
+                    foreach (string e in entries)
+                    {
+                        Debug.Log(e);
+                    }
+                    PlayerManager.Instance.messenger.Log("Playerlist logged", 2f);
+                    break;
+                case "Message":
+                    PlayerManager.Instance.messenger.Log(commandResponsePacket.Message, 2f);
+                    break;
+                case "Command":
+                    Plugin.Instance.OnCommandReceived?.Invoke(commandResponsePacket.Message);
+                    break;
+            }
+        }
+
+        /// <summary>
         /// Handle the message of somebody honking.
         /// </summary>
         /// <param name="hornPacket">The <see cref="HornPacket"/> containing the honk honk data. </param>
@@ -626,7 +685,7 @@ namespace TeamXClient
         /// <param name="customMessagePacket">The <see cref="CustomMessagePacket"/> containing the custom message data. </param>
         public void HandleCustomMessage(CustomMessagePacket customMessagePacket)
         {
-            //...
+            Plugin.Instance.OnCustomMessageReceived?.Invoke((customMessagePacket.SteamID, customMessagePacket.Payload));
         }
 
         /// <summary>
@@ -710,7 +769,7 @@ namespace TeamXClient
         /// <param name="editorBlockCreate">The <see cref="EditorBlockCreatePacket"/> containing the block data.</param>
         public void HandleEditorBlockCreate(EditorBlockCreatePacket editorBlockCreate)
         {
-            Block packetBlock = editorBlockCreate.BlockString.FromJson();
+            BlockPropertyJSONX packetBlock = BlockPropertyJSONX.FromJson(editorBlockCreate.BlockString);
 
             // Update the editor state
             Plugin.Instance.editor.Add(packetBlock);
@@ -728,13 +787,13 @@ namespace TeamXClient
         /// <param name="editorBlockUpdate">The <see cref="EditorBlockUpdatePacket"/> containing the updated block data.</param>
         public void HandleEditorBlockUpdate(EditorBlockUpdatePacket editorBlockUpdate)
         {
-            Block packetBlock = editorBlockUpdate.BlockString.FromJson();
+            BlockPropertyJSONX packetBlock = BlockPropertyJSONX.FromJson(editorBlockUpdate.BlockString);
 
             Plugin.Instance.editor.Update(packetBlock);
 
             if (Plugin.Instance.editor.InLevelEditor())
             {
-                Plugin.Instance.editor.Modifier.UpdateBlock(packetBlock.ToBlockPropertyJSON());
+                Plugin.Instance.editor.Modifier.UpdateBlock(packetBlock.blockPropertyJSON);
             }
         }
 
@@ -764,7 +823,7 @@ namespace TeamXClient
 
             if (Plugin.Instance.editor.InLevelEditor())
             {
-                Plugin.Instance.editor.Modifier.UpdateSkybox(editorSkybox.Skybox);
+                Plugin.Instance.editor.Modifier.UpdateSkybox(Plugin.Instance.editor.Skybox);
             }
         }
 
@@ -805,13 +864,12 @@ namespace TeamXClient
         /// <param name="updateDenied">The <see cref="EditorBlockUpdateDeniedPacket"/> containing the block's previous state.</param>
         public void HandleEditorBlockUpdateDenied(EditorBlockUpdateDeniedPacket updateDenied)
         {
-            Block packetBlock = updateDenied.BlockString.FromJson();
+            BlockPropertyJSONX packetBlock = BlockPropertyJSONX.FromJson(updateDenied.BlockString);
             Plugin.Instance.editor.Update(packetBlock);
 
             if (Plugin.Instance.editor.InLevelEditor())
             {
-                BlockPropertyJSON blockPropertyJSON = packetBlock.ToBlockPropertyJSON();
-                Plugin.Instance.editor.Modifier.UpdateBlock(blockPropertyJSON);
+                Plugin.Instance.editor.Modifier.UpdateBlock(packetBlock.blockPropertyJSON);
             }
         }
 
@@ -822,7 +880,7 @@ namespace TeamXClient
         /// <param name="destroyDenied">The <see cref="EditorBlockDestroyDeniedPacket"/> containing the block's data.</param>
         public void HandleEditorBlockDestroyDenied(EditorBlockDestroyDeniedPacket destroyDenied)
         {
-            Block packetBlock = destroyDenied.BlockString.FromJson();
+            BlockPropertyJSONX packetBlock = BlockPropertyJSONX.FromJson(destroyDenied.BlockString);
             Plugin.Instance.editor.Add(packetBlock);
 
             if (Plugin.Instance.editor.InLevelEditor())
@@ -857,7 +915,7 @@ namespace TeamXClient
 
             if (Plugin.Instance.editor.InLevelEditor())
             {
-                Plugin.Instance.editor.Modifier.UpdateSkybox(skyboxDenied.Skybox);
+                Plugin.Instance.editor.Modifier.UpdateSkybox(Plugin.Instance.editor.Skybox);
             }
         }
 
@@ -874,11 +932,19 @@ namespace TeamXClient
             }
         }
 
+        public void HandleDeselectAllOrder(EditorDeselectAllOrderPacket deselectOrder)
+        {
+            if(Plugin.Instance.editor.InLevelEditor())
+            {
+                Plugin.Instance.editor.Modifier.DeselectAllBlocks();
+            }
+        }
+
         /// <summary>
         /// Sends a block creation request to the server.
         /// </summary>
         /// <param name="block">The <see cref="Block"/> to be created.</param>
-        public void SendBlockCreate(Block block)
+        public void SendBlockCreate(BlockPropertyJSONX block)
         {
             EditorBlockCreatePacket blockCreate = new EditorBlockCreatePacket()
             {
@@ -891,9 +957,9 @@ namespace TeamXClient
             client.SendMessage(outgoingMessage, NetDeliveryMethod.ReliableOrdered, 0);
 
             //Is this block part of the selection?
-            if (Utils.IsBlockSelected(block.UID))
+            if (Utils.IsBlockSelected(block.blockPropertyJSON.u))
             {
-                SendSelection(block.UID);
+                SendSelection(block.blockPropertyJSON.u);
             }
         }
 
@@ -901,7 +967,7 @@ namespace TeamXClient
         /// Sends a block update request to the server.
         /// </summary>
         /// <param name="block">The <see cref="Block"/> to be updated.</param>
-        public void SendBlockUpdate(Block block)
+        public void SendBlockUpdate(BlockPropertyJSONX block)
         {
             EditorBlockUpdatePacket blockUpdate = new EditorBlockUpdatePacket()
             {
@@ -952,7 +1018,7 @@ namespace TeamXClient
         /// Sends a skybox update request to the server.
         /// </summary>
         /// <param name="skybox">The new skybox value to be set.</param>
-        public void SendSkyboxUpdate(int skybox)
+        public void SendSkyboxUpdate(string skybox)
         {
             EditorSkyboxPacket skyboxPacket = new EditorSkyboxPacket()
             {

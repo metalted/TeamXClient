@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,15 +35,14 @@ namespace TeamXClient
         /// </summary>
         /// <param name="block">The block to create.</param>
         /// <exception cref="ArgumentNullException">Thrown if the block is null.</exception>
-        public void CreateBlock(Block block, bool recalculate = true)
+        public void CreateBlock(BlockPropertyJSONX block, bool recalculate = true)
         {
             if (block == null)
             {
                 throw new ArgumentNullException(nameof(block), "Block cannot be null.");
             }
 
-            BlockPropertyJSON blockPropertyJSON = block.ToBlockPropertyJSON();
-            CreateBlock(blockPropertyJSON, recalculate);
+            CreateBlock(block.blockPropertyJSON, recalculate);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace TeamXClient
                 throw new ArgumentNullException(nameof(blockPropertyJSON), "BlockPropertyJSON cannot be null.");
             }
 
-            editor.Central.undoRedo.GenerateNewBlock(blockPropertyJSON, blockPropertyJSON.UID);
+            editor.Central.undoRedo.GenerateNewBlock(blockPropertyJSON, blockPropertyJSON.u);
 
             if (recalculate)
             {
@@ -77,17 +77,15 @@ namespace TeamXClient
                 throw new ArgumentNullException(nameof(jsonBlock), "BlockPropertyJSON cannot be null.");
             }
 
-            BlockProperties blockProperties = editor.Central.undoRedo.TryGetBlockFromAllBlocks(jsonBlock.UID);
+            BlockProperties blockProperties = editor.Central.undoRedo.TryGetBlockFromAllBlocks(jsonBlock.u);
 
             if (blockProperties != null)
             {
-                editor.Central.undoRedo.allBlocksDictionary.Remove(jsonBlock.UID);
+                editor.Central.undoRedo.allBlocksDictionary.Remove(jsonBlock.u);
                 BlockPropertyJSON blockPropertyJSON = blockProperties.ConvertBlockToJSON_v15();
                 GameObject.Destroy(blockProperties.gameObject);
-
-                jsonBlock.CopyTo(blockPropertyJSON);
-
-                editor.Central.undoRedo.GenerateNewBlock(blockPropertyJSON, blockPropertyJSON.UID);
+                //jsonBlock.CopyTo(blockPropertyJSON);
+                editor.Central.undoRedo.GenerateNewBlock(jsonBlock, blockPropertyJSON.u);
             }
         }
 
@@ -163,9 +161,23 @@ namespace TeamXClient
         /// Updates the editor's skybox with the specified skybox ID.
         /// </summary>
         /// <param name="skyboxID">The ID of the skybox to set.</param>
-        public void UpdateSkybox(int skyboxID)
+        public void UpdateSkybox(string skybox)
         {
-            editor.Central.skybox.SetToSkybox(skyboxID, true);
+            Environment_DataObject environment = JsonConvert.DeserializeObject<Environment_DataObject>(skybox);
+
+            //editor.Central.skyboxTool.SomeSettingIsAboutToGetChanged();
+            editor.Central.skybox.simulateLofi = false;
+            if(environment.skyboxOverride == null)
+            {
+                editor.Central.skyboxTool.internalSkyboxpreset = environment.skybox;
+                editor.Central.skybox.SetToSkybox(environment.skybox, true, (SkyboxCreator_DataObject)null, true);
+            }
+            else
+            {
+                editor.Central.skyboxTool.internalSkyboxpreset = 15;
+                editor.Central.skybox.SetToSkybox(0, true, environment.skyboxOverride, true);
+            }
+            //editor.Central.skyboxTool.SomeSettingWasChanged();
         }
 
         /// <summary>

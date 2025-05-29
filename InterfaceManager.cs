@@ -650,7 +650,14 @@ namespace TeamXClient
 
             if (!string.IsNullOrEmpty(currentText))
             {
-                Plugin.Instance.client.SendChatMessage(currentText);
+                if(currentText[0] == '/')
+                {
+                    Plugin.Instance.client.SendCommand(currentText);
+                }
+                else
+                {
+                    Plugin.Instance.client.SendChatMessage(currentText);
+                }                
             }
 
             UnblockInput();

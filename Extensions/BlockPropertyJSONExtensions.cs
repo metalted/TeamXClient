@@ -14,7 +14,7 @@ namespace TeamXClient.Extensions
         /// <param name="from">The source instance to copy properties from.</param>
         /// <param name="to">The target instance to copy properties to.</param>
         /// <exception cref="ArgumentNullException">Thrown when either <paramref name="from"/> or <paramref name="to"/> is null.</exception>
-        public static void CopyTo(this BlockPropertyJSON from, BlockPropertyJSON to)
+        /*public static void CopyTo(this BlockPropertyJSON from, BlockPropertyJSON to)
         {
             if (from == null)
             {
@@ -32,6 +32,6 @@ namespace TeamXClient.Extensions
             to.localScale = from.localScale;
             to.properties = from.properties.ToList();
             to.UID = from.UID;
-        }
+        }*/
     }
 }
